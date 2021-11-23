@@ -24,6 +24,7 @@
 ### Рекомендуется к ознакомлению
 https://learnopencv.com/average-face-opencv-c-python-tutorial/   
 https://learnopencv.com/using-facial-landmarks-for-overlaying-faces-with-masks/   
+https://zpl.fi/aligning-point-patterns-with-kabsch-umeyama-algorithm/   
 https://forum.faceswap.dev/viewtopic.php?f=5&t=27#extract    
 https://forum.faceswap.dev/viewtopic.php?t=146   
 https://github.com/1adrianb/face-alignment   
