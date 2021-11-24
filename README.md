@@ -17,12 +17,6 @@
 - незначительные ошибки
 
 ### Тестирование репозитория https://github.com/hujinsen/StarGAN-Voice-Conversion    
-### Нужно проверить:   
-https://github.com/yistLin/FragmentVC
-https://github.com/onejiin/CycleGAN-VC2    
-https://github.com/alpharol/Voice_Conversion_CycleGAN2   
-https://github.com/andabi/deep-voice-conversion   
-
 
 ### Рекомендуется к ознакомлению
 https://learnopencv.com/average-face-opencv-c-python-tutorial/   
