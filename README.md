@@ -27,7 +27,7 @@
 ### Минусы:   
 - качество   
 
-### https://github.com/andabi/deep-voice-conversion   
+### Тестирование репозитория https://github.com/andabi/deep-voice-conversion   
 ### Плюсы:   
 - уневерсальность 
 - качество синтезированного голоса        
