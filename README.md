@@ -17,6 +17,22 @@
 - незначительные ошибки
 
 ### Тестирование репозитория https://github.com/hujinsen/StarGAN-Voice-Conversion    
+### Плюсы:   
+- использование одной модели   
+- подготовка данных   
+### Минусы:   
+- качество   
+
+### https://github.com/andabi/deep-voice-conversion   
+### Плюсы:   
+- уневерсальность 
+- качество синтезированного голоса        
+### Минусы:   
+- качество голоса в текст   
+- подготовка данных (фонемы)
+- две модели (1 голос в текст; 2 текст в голос)    
+- скорость   
+
 
 ### Рекомендуется к ознакомлению
 https://learnopencv.com/average-face-opencv-c-python-tutorial/   
@@ -31,9 +47,12 @@ https://github.com/iperov/DeepFaceLab
 https://github.com/deepfakes/faceswap   
 https://github.com/hujinsen/StarGAN-Voice-Conversion    
 https://github.com/andabi/deep-voice-conversion    
-https://github.com/alpharol/Voice_Conversion_CycleGAN2   
-https://github.com/yistLin/FragmentVC   
-https://github.com/onejiin/CycleGAN-VC2   
+https://github.com/alpharol/Voice_Conversion_CycleGAN2 
+https://github.com/mindmapper15/Voice-Converter   
+https://github.com/jdbermeol/deep_voice_2    
+https://github.com/yistLin/FragmentVC      
+https://github.com/onejiin/CycleGAN-VC2     
+
 
 
 
