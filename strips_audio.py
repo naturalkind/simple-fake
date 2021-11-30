@@ -6,6 +6,7 @@ for scene in bpy.data.scenes:
         strip = scene.sequence_editor.sequences_all
         if strip is not None:
             bpy.ops.sequencer.select_all(action='DESELECT')  
+            strip = sorted(strip, key=lambda a: a.frame_final_start)
             for ix, i in enumerate(strip):
                     i.select = True
                     temp = i.frame_final_end-i.frame_final_duration
@@ -15,5 +16,4 @@ for scene in bpy.data.scenes:
                                           relative_path=True, 
                                           container='WAV', codec='PCM')
                     time.sleep(3)
-                    ix += 1
                     bpy.ops.sequencer.select_all(action='DESELECT')
