@@ -60,7 +60,7 @@ https://github.com/israelg99/deepvoice
 https://github.com/CorentinJ/Real-Time-Voice-Cloning    
 https://github.com/jackaduma/CycleGAN-VC3    
 https://github.com/GANtastic3/MaskCycleGAN-VC    
-
+https://github.com/smoke-trees/Voice-synthesis    
 
 
 
