@@ -55,7 +55,11 @@ https://github.com/alpharol/Voice_Conversion_CycleGAN2
 https://github.com/mindmapper15/Voice-Converter   
 https://github.com/jdbermeol/deep_voice_2    
 https://github.com/yistLin/FragmentVC      
-https://github.com/onejiin/CycleGAN-VC2     
+https://github.com/onejiin/CycleGAN-VC2    
+https://github.com/israelg99/deepvoice   
+https://github.com/CorentinJ/Real-Time-Voice-Cloning    
+https://github.com/jackaduma/CycleGAN-VC3    
+https://github.com/GANtastic3/MaskCycleGAN-VC    
 
 
 
