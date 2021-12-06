@@ -51,6 +51,9 @@ https://zpl.fi/aligning-point-patterns-with-kabsch-umeyama-algorithm/
 https://forum.faceswap.dev/viewtopic.php?f=5&t=27#extract    
 https://forum.faceswap.dev/viewtopic.php?t=146   
 https://github.com/1adrianb/face-alignment   
+https://nbviewer.org/github/mgeier/python-audio/blob/master/audio-files/audio-files-with-wave.ipynb    
+https://github.com/descriptinc/melgan-neurips    
+
 
 ### Популярные готовые решения   
 https://github.com/iperov/DeepFaceLab    
