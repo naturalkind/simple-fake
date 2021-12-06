@@ -71,5 +71,20 @@ https://github.com/jackaduma/CycleGAN-VC3
 https://github.com/GANtastic3/MaskCycleGAN-VC    
 https://github.com/smoke-trees/Voice-synthesis    
 
+### Черновик
+#python3 -m mask_cyclegan_vc.test     --name mask_cyclegan_vc_VCC2SF3_VCC2TF1     --save_dir results/     --preprocessed_data_dir vcc2018_preprocessed/vcc2018_training     --gpu_ids 0     --speaker_A_id VCC2SM5     --speaker_B_id SF3     --ckpt_dir results/mask_cyclegan_vc_VCC2SF3_VCC2TF1/ckpts     --load_epoch 800  --model_name generator_B2A
 
+
+#python3 data_preprocessing/preprocess_vcc2018.py   --data_directory vcc2018/vcc2018_training   --preprocessed_data_directory vcc2018_preprocessed/vcc2018_training   --speaker_ids SF3 VCC2SM5
+
+#https://www.youtube.com/watch?v=AShHJdSIxkY
+
+#https://blog.francoismaillet.com/epic-celebration/
+
+#https://stackoverflow.com/questions/54482346/reading-a-wav-file-with-scipy-and-librosa-in-python/56905264
+#https://coderoad.ru/54482346/%D0%A7%D1%82%D0%B5%D0%BD%D0%B8%D0%B5-wav-%D1%84%D0%B0%D0%B9%D0%BB%D0%B0-%D1%81-scipy-%D0%B8-librosa-%D0%B2-python
+
+#https://stackoverflow.com/questions/59056786/python-librosa-with-microphone-input
+#https://stackoverflow.com/questions/42625286/how-to-process-audio-stream-in-realtime
+#https://towardsdatascience.com/audio-deep-learning-made-simple-part-2-why-mel-spectrograms-perform-better-aad889a93505
 
