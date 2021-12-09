@@ -33,32 +33,38 @@ from mask_cyclegan_vc.utils import decode_melspectrogram, get_mel_spectrogram_fi
 from logger.train_logger import TrainLogger
 from saver.model_saver import ModelSaver
 import cv2
+import wave
 
-
-
-  
+FORMAT = pyaudio.paFloat32
+CHANNELS = 1 #2
+#RATE = 44100
 RATE = 22050
-frames = []
+CHUNK = 1024#22050 #1024
+RECORD_SECONDS = 10
+WAVE_OUTPUT_FILENAME = "file.wav"
+  
+audio = pyaudio.PyAudio()
+  
+# start Recording
+stream = audio.open(format=FORMAT, channels=CHANNELS,
+                rate=RATE, input=True,
+                frames_per_buffer=CHUNK)
+print ("recording...", int(RATE / CHUNK * RECORD_SECONDS))
+#frames = []
 vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-mel_list = []
-wav_orig, _ = librosa.load("vcc2018/vcc2018_training/SF3/a0.wav", sr=RATE, mono=True)
-spec = vocoder(torch.tensor([wav_orig]))
 
-if spec.shape[-1] >= 64:    # training sample consists of 64 randomly cropped frames
-    mel_list.append(spec.cpu().detach().numpy()[0])
-
-mel_concatenated = np.concatenate(mel_list, axis=1)
-mel_mean = np.mean(mel_concatenated, axis=1, keepdims=True)
-mel_std = np.std(mel_concatenated, axis=1, keepdims=True) + 1e-9
-
-mel_normalized = list()
-for mel in mel_list:
-    assert mel.shape[-1] >= 64, f"Mel spectogram length must be greater than 64 frames, but was {mel.shape[-1]}"
-    app = (mel - mel_mean) / mel_std
-    mel_normalized.append(app)
-
-    
-print (wav_orig.shape, _, spec.shape, mel_mean.shape, mel_std.shape, mel_concatenated.shape, mel_normalized[0].shape)
+#for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+#    data = stream.read(CHUNK)
+#    array_a = np.frombuffer(data, dtype=np.float32)
+#    spec = vocoder(torch.tensor([array_a]))
+#    #array_a = np.frombuffer(data, dtype=np.int16)
+#    #array_a = np.stack((array_a[::2], array_a[1::2]), axis=0) 
+#    frames.append(array_a)
+#    print (i, array_a.shape, len(data), int(RATE / CHUNK * 1), spec.shape)
+#    
+#numpydata = np.hstack(frames) 
+#spec = vocoder(torch.tensor([numpydata]))
+#print (numpydata.shape, len(frames), spec.shape) 
 
 class MaskCycleGANVCTesting(object):
     """Tester for MaskCycleGAN-VC
@@ -82,29 +88,23 @@ class MaskCycleGANVCTesting(object):
             'descriptinc/melgan-neurips', 'load_melgan')
         self.sample_rate = args.sample_rate
 
-
-#    np.savez(os.path.join(cache_folder, speaker_id, f"{speaker_id}_norm_stat.npz"),
-#             mean=mel_mean,
-#             std=mel_std)
-
-#    save_pickle(variable=mel_normalized,
-#                fileName=os.path.join(cache_folder, speaker_id, f"{speaker_id}_normalized.pickle"))
-
         # Initialize speakerA's dataset
         self.dataset_A = self.loadPickleFile(os.path.join(
             args.preprocessed_data_dir, self.speaker_A_id, f"{self.speaker_A_id}_normalized.pickle"))
-#            
         dataset_A_norm_stats = np.load(os.path.join(
             args.preprocessed_data_dir, self.speaker_A_id, f"{self.speaker_A_id}_norm_stat.npz"))
         self.dataset_A_mean = dataset_A_norm_stats['mean']
         self.dataset_A_std = dataset_A_norm_stats['std']
         print ("Initialize speakerA's dataset", self.dataset_A_mean.shape, self.dataset_A_std.shape)
-        self.dataset_B = mel_normalized
-        self.dataset_B_mean = mel_mean
-        self.dataset_B_std = mel_std
+        # Initialize speakerB's dataset
+        self.dataset_B = self.loadPickleFile(os.path.join(
+            args.preprocessed_data_dir, self.speaker_B_id, f"{self.speaker_B_id}_normalized.pickle"))
+        dataset_B_norm_stats = np.load(os.path.join(
+            args.preprocessed_data_dir, self.speaker_B_id, f"{self.speaker_B_id}_norm_stat.npz"))
+        self.dataset_B_mean = dataset_B_norm_stats['mean']
+        self.dataset_B_std = dataset_B_norm_stats['std']
 
         source_dataset = self.dataset_A if self.model_name == 'generator_A2B' else self.dataset_B
-        print ("SOURCE DATA", source_dataset[0].shape, self.dataset_B[0].shape)
         self.dataset = VCDataset(datasetA=source_dataset,
                                  datasetB=None,
                                  valid=True)
@@ -134,34 +134,23 @@ class MaskCycleGANVCTesting(object):
             return pickle.load(f)
 
     def test(self):
-#        for i, sample in enumerate(self.test_dataloader):
-#            print (i, sample.shape)
-            
-        for i, sample in enumerate(tqdm(self.test_dataloader)):
-                save_path = None
-                part = 0
-                for i in range(sample.shape[-1]//30):
-                    real_B = sample[:,:, part:part+30]
-                    part += 30
-                    print ("B >>>>", real_B.shape, self.dataset_B_std.shape)
-                    print ("A >>>>", self.dataset_A_std.shape, self.dataset_A_mean.shape)
-                    real_B = real_B.to(self.device, dtype=torch.float)
-                    fake_A = self.generator(real_B, torch.ones_like(real_B))
-                    #real_mel_A_fig = get_mel_spectrogram_fig(fake_A[0].detach().cpu())
-                    #imgs(real_mel_A_fig)
-                    
-                    wav_fake_A = decode_melspectrogram(self.vocoder, fake_A[0].detach(
-                    ).cpu(), self.dataset_A_mean, self.dataset_A_std).cpu()
-
-                    wav_real_B = decode_melspectrogram(self.vocoder, real_B[0].detach(
-                    ).cpu(), self.dataset_B_mean, self.dataset_B_std).cpu()
-
-                    save_path = os.path.join(self.converted_audio_dir, f"{i}-converted_{self.speaker_B_id}_to_{self.speaker_A_id}.wav")
-                    save_path_orig = os.path.join(self.converted_audio_dir,
-                                             f"{i}-original_{self.speaker_B_id}_to_{self.speaker_A_id}.wav")
-                    wav_fake_A = wav_fake_A.cpu().detach().numpy()
-                    wav_real_B = wav_real_B.cpu().detach().numpy()
-                    writeS(save_path, self.sample_rate, wav_fake_A.T)
+            frames = []
+            for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+                data = stream.read(CHUNK)
+                array_a = np.frombuffer(data, dtype=np.float32)
+                frames.append(array_a)
+            frames = np.hstack(frames)
+            print (np.array(frames).shape, self.sample_rate)
+            spec = vocoder(torch.tensor([frames]))
+            real_B = spec#sample
+            real_B = real_B.to(self.device, dtype=torch.float)
+            fake_A = self.generator(real_B, torch.ones_like(real_B))
+            wav_fake_A = decode_melspectrogram(self.vocoder, fake_A[0].detach(
+            ).cpu(), self.dataset_A_mean, self.dataset_A_std).cpu()
+            wav_fake_A = wav_fake_A.cpu().detach().numpy()
+                
+            save_path = os.path.join(self.converted_audio_dir, f"F-converted_{self.speaker_B_id}_to_{self.speaker_A_id}.wav")
+            writeS(save_path, RATE, wav_fake_A.T)
 
 
 if __name__ == "__main__":
@@ -170,6 +159,10 @@ if __name__ == "__main__":
     print (args)
     tester = MaskCycleGANVCTesting(args)
     tester.test()
+
+
+#[0. 0. 0.] <class 'numpy.ndarray'> (66444,) 22050 torch.Size([1, 80, 259]) (80, 1) (80, 1) (80, 259) (80, 259)
+
 #---------------------------------------->
 
 
