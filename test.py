@@ -28,7 +28,7 @@ from scipy.io.wavfile import write
 # Запись голоса
 
 FORMAT = pyaudio.paInt16
-CHANNELS = 1 #2
+CHANNELS = 2
 #RATE = 44100
 RATE = 22050
 CHUNK = 1024
@@ -50,6 +50,7 @@ try:
         data = stream.read(CHUNK)
         array_a = np.frombuffer(data, dtype=np.int16)
         frames.append(array_a)
+#        frames.append(data)
     print ("finished recording")                                                        
 except KeyboardInterrupt:
     #write('output2.wav', RATE, np.array(frames).astype('int16')) 
@@ -64,3 +65,5 @@ except KeyboardInterrupt:
     waveFile.writeframes(b''.join(frames))
     waveFile.close()
 
+# Play audio realtime
+#https://stackoverflow.com/questions/31674416/python-realtime-audio-streaming-with-pyaudio-or-something-else

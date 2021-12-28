@@ -7,6 +7,8 @@ from glob import glob
 import torch, face_detection
 from models import Wav2Lip
 import platform
+import time
+import pyaudio
 
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
 
@@ -52,6 +54,14 @@ parser.add_argument('--nosmooth', default=False, action='store_true',
 
 args = parser.parse_args()
 args.img_size = 96
+
+
+Audio = pyaudio.PyAudio()
+stream2 = Audio.open(format=pyaudio.paInt16,
+                channels=1,
+                rate=16000,
+                output=True)
+
 
 if os.path.isfile(args.face) and args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
 	args.static = True
@@ -179,6 +189,9 @@ def load_model(path):
 	return model.eval()
 
 def main():
+
+#   1610 Video
+#   2246 Audio
 	if not os.path.isfile(args.face):
 		raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -193,7 +206,7 @@ def main():
 		print('Reading video frames...')
 
 		full_frames = []
-		while 1:
+		while True:
 			still_reading, frame = video_stream.read()
 			if not still_reading:
 				video_stream.release()
@@ -209,7 +222,7 @@ def main():
 			if y2 == -1: y2 = frame.shape[0]
 
 			frame = frame[y1:y2, x1:x2]
-
+			A += 1
 			full_frames.append(frame)
 
 	print ("Number of frames available for inference: "+str(len(full_frames)))
@@ -223,7 +236,7 @@ def main():
 
 	wav = audio.load_wav(args.audio, 16000)
 	mel = audio.melspectrogram(wav)
-	print(mel.shape)
+	print(mel.shape, wav.shape, int(wav.shape[0] / 16000 * 1000))
 
 	if np.isnan(mel.reshape(-1)).sum() > 0:
 		raise ValueError('Mel contains nan! Using a TTS voice? Add a small epsilon noise to the wav file and try again')
@@ -270,7 +283,11 @@ def main():
 
 			f[y1:y2, x1:x2] = p
 			out.write(f)
-
+			
+			cv2.imshow("Image", f)
+			time.sleep(fps/1000)
+			cv2.waitKey(1)
+			
 	out.release()
 
 	command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(args.audio, 'temp/result.avi', args.outfile)
