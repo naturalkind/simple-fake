@@ -15,8 +15,8 @@ def imgs(x):
       cv2.waitKey(0)
       cv2.destroyAllWindows()
 
-vp_clip = VideoFileClip("vm.mp4")
-my_clip = VideoFileClip("my.mp4")
+vp_clip = VideoFileClip("old_version/vm.mp4")
+my_clip = VideoFileClip("old_version/my.mp4")
 for i in range(20):
     face = vp_clip.get_frame(i)
     body = my_clip.get_frame(i)
@@ -46,7 +46,7 @@ for i in range(20):
         
         hull = cv2.convexHull(points)
         face_cp = face.copy()
-        imgs(cv2.cvtColor((cv2.polylines(face_cp, [hull], True, (255,255,255), 3)), cv2.COLOR_BGR2RGB))
+        imgs(cv2.cvtColor((cv2.polylines(face_cp, [hull], True, (255,255,255), 1)), cv2.COLOR_BGR2RGB))
         
         face_image_1 = cv2.bitwise_and(face, face, mask=mask)
         
@@ -78,9 +78,9 @@ for i in range(20):
             pt3 = (triangle[4], triangle[5])
             
             # Draws a line for each side of the triangle
-            cv2.line(face_cp, pt1, pt2, (255, 255, 255), 3,  0)
-            cv2.line(face_cp, pt2, pt3, (255, 255, 255), 3,  0)
-            cv2.line(face_cp, pt3, pt1, (255, 255, 255), 3,  0)
+            cv2.line(face_cp, pt1, pt2, (255, 255, 255), 1,  0)
+            cv2.line(face_cp, pt2, pt3, (255, 255, 255), 1,  0)
+            cv2.line(face_cp, pt3, pt1, (255, 255, 255), 1,  0)
 
             index_pt1 = np.where((points == pt1).all(axis=1))
             index_pt1 = get_index(index_pt1)
