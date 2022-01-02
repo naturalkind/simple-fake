@@ -1,7 +1,6 @@
 # simple-swap-face
 
 # Video
-
 ### Testing Repository https://github.com/shaoanlu/faceswap-GAN/   
 ### Pros:
 - Fluent concept 
@@ -19,7 +18,6 @@
 - Calculation errors (Rounding errors)  
 
 # Audio
-
 ### Testing Repository https://github.com/hujinsen/StarGAN-Voice-Conversion    
 ### Pros:   
 - Single model system  
@@ -43,6 +41,32 @@
 - Ease of training data input   
 ### Cons:   
 - Low quality overall   
+
+
+# Emotion Recognition
+### Testing Repository https://github.com/xuanjihe/speech-emotion-recognition
+### Pros:    
+- Ease of use
+- Fast resaults   
+### Cons:   
+- Outdated a bit  
+
+### Testing Repository https://github.com/MITESHPUTHRANNEU/Speech-Emotion-Analyzer
+### Pros:    
+- Speech patterns are easy to test
+- Convinient inteface   
+### Cons:   
+- Performance could be better
+
+# NLP 
+### Testing Repository https://github.com/keon/awesome-nlp
+### Pros:    
+- Vast veriety of different programming languages
+- Convinient inteface 
+- Proven and used repositories  
+### Cons:   
+- Steep learning curve
+
 
 ### Good articles and tutorials
 https://learnopencv.com/average-face-opencv-c-python-tutorial/   
@@ -78,7 +102,7 @@ https://github.com/jackaduma/CycleGAN-VC3
 https://github.com/GANtastic3/MaskCycleGAN-VC    
 https://github.com/smoke-trees/Voice-synthesis    
 
-### For team
+### CLI Shortuct 
 python3 -m mask_cyclegan_vc.test     --name mask_cyclegan_vc_VCC2SF3_VCC2TF1     --save_dir results/     --preprocessed_data_dir vcc2018_preprocessed/vcc2018_training     --gpu_ids 0     --speaker_A_id VCC2SM5     --speaker_B_id SF3     --ckpt_dir results/mask_cyclegan_vc_VCC2SF3_VCC2TF1/ckpts     --load_epoch 800  --model_name generator_B2A     
 
 
