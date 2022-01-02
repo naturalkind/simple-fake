@@ -1,50 +1,50 @@
 # simple-swap-face
 
-# Видео
+# Video
 
-### Тестирование репозитория https://github.com/shaoanlu/faceswap-GAN/   
-### Плюсы:
-- базовая концепция подготовки данных   
-- использование фильтров калмана в кадрах   
-- стандартная архитектура      
-### Минусы:   
-- выравнивание лиц только по глазам
+### Testing Repository https://github.com/shaoanlu/faceswap-GAN/   
+### Pros:
+- Fluent concept 
+- Ease of training data input
+- Advenced filters (Kalman filtering technique)       
+### Cons:   
+- Eye straightening only
 
-### Тестирование репозитория https://github.com/deepfakes/faceswap/   
-### Плюсы:
-- несколько алгоритмов для каждой задачи   
-- интерфейс   
-- модели написаны и обучены на одном фреймворке tf 2.0+     
-### Минусы:   
-- незначительные ошибки   
+### Testing Repository https://github.com/deepfakes/faceswap/   
+### Pros:
+- Various algorithms for each task type  
+- Nice GUI
+- Models are trained on tenserflow 2.0+ framework   
+### Cons:   
+- Calculation errors (Rounding errors)  
 
-# Аудио
+# Audio
 
-### Тестирование репозитория https://github.com/hujinsen/StarGAN-Voice-Conversion    
-### Плюсы:   
-- использование одной модели   
-- подготовка данных   
-### Минусы:   
-- качество   
+### Testing Repository https://github.com/hujinsen/StarGAN-Voice-Conversion    
+### Pros:   
+- Single model system  
+- Ease of training data input 
+### Cons:   
+- Somewhat low quality   
 
-### Тестирование репозитория https://github.com/andabi/deep-voice-conversion   
-### Плюсы:   
-- уневерсальность 
-- качество синтезированного голоса        
-### Минусы:   
-- качество голоса в текст   
-- подготовка данных (фонемы)
-- две модели (1 голос в текст; 2 текст в голос)    
-- скорость   
+### Testing Repository https://github.com/andabi/deep-voice-conversion   
+### Pros:   
+- Universal 
+- Overall high quality of output        
+### Cons:   
+- Voice into text tranlation is somewhat weak   
+- Non intuetive dataset for training input
+- 2 Different models 
+- Low speed   
 
-### Тестирование репозитория https://github.com/GANtastic3/MaskCycleGAN-VC    
-### Плюсы:    
-- использование одной модели   
-- подготовка данных   
-### Минусы:   
-- качество   
+### Testing Repository https://github.com/GANtastic3/MaskCycleGAN-VC    
+### Pros:    
+- One model is being used  
+- Ease of training data input   
+### Cons:   
+- Low quality overall   
 
-### Рекомендуется к ознакомлению
+### Good articles and tutorials
 https://learnopencv.com/average-face-opencv-c-python-tutorial/   
 https://learnopencv.com/using-facial-landmarks-for-overlaying-faces-with-masks/   
 https://zpl.fi/aligning-point-patterns-with-kabsch-umeyama-algorithm/   
@@ -62,7 +62,7 @@ https://stackoverflow.com/questions/42625286/how-to-process-audio-stream-in-real
 https://towardsdatascience.com/audio-deep-learning-made-simple-part-2-why-mel-spectrograms-perform-better-aad889a93505    
 https://stackoverflow.com/questions/35970282/what-are-chunks-samples-and-frames-when-using-pyaudio     
 
-### Популярные готовые решения   
+### Ready to use open-source projects   
 https://github.com/iperov/DeepFaceLab    
 https://github.com/deepfakes/faceswap   
 https://github.com/hujinsen/StarGAN-Voice-Conversion    
@@ -78,7 +78,7 @@ https://github.com/jackaduma/CycleGAN-VC3
 https://github.com/GANtastic3/MaskCycleGAN-VC    
 https://github.com/smoke-trees/Voice-synthesis    
 
-### Черновик
+### For team
 python3 -m mask_cyclegan_vc.test     --name mask_cyclegan_vc_VCC2SF3_VCC2TF1     --save_dir results/     --preprocessed_data_dir vcc2018_preprocessed/vcc2018_training     --gpu_ids 0     --speaker_A_id VCC2SM5     --speaker_B_id SF3     --ckpt_dir results/mask_cyclegan_vc_VCC2SF3_VCC2TF1/ckpts     --load_epoch 800  --model_name generator_B2A     
 
 
