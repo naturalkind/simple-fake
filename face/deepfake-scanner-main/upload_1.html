@@ -1,0 +1,317 @@
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Uploader</title>
+		<div id="loader"></div>
+		<div id="video-box">
+			<img id="liveImg" />
+			<video controls id="video"></video>
+			<canvas></canvas>
+		</div>
+		<script type="text/javascript" charset="utf-8">
+			var t_el = document.getElementById("loader");
+			t_el.style.display = "none";
+		
+			var img = document.getElementById("liveImg");
+			var target_fps = 24;
+
+			var request_start_time = performance.now();
+			var start_time = performance.now();
+			var time = 0;
+			var request_time = 0;
+			var time_smoothing = 0.9; // larger=more smoothing
+			var request_time_smoothing = 0.2; // larger=more smoothing
+			var target_time = 1000 / target_fps;
+			
+			
+			window.addEventListener("load", Ready);
+			
+			function Ready(){
+				if(window.File && window.FileReader){ //These are the necessary HTML5 objects the we are going to use
+					document.getElementById('UploadButton').addEventListener('click', StartUpload);
+					document.getElementById('FileBox').addEventListener('change', FileChosen);
+				}
+				else
+				{
+					document.getElementById('UploadArea').innerHTML = "Your Browser Doesn't Support The File API Please Update Your Browser";
+				}
+			}
+			var SelectedFile;
+			var Name;
+                        var fileSize;
+                        var ws = new WebSocket("ws://178.158.131.41:8008/websocket"); // IP
+                        var PR;
+                        var sPR;
+
+			function FileChosen(evnt) {
+		                SelectedFile = evnt.target.files[0];
+				document.getElementById('NameBox').value = SelectedFile.name;
+                                fileSize = SelectedFile.size;
+
+		        }
+
+
+			
+                        //ws.binaryType = 'arraybuffer';
+                        ws.onopen = function() {
+                            console.log("connection was established");
+                        };
+
+
+			function StartUpload(){
+				if(document.getElementById('FileBox').value != "")
+				{
+					//FReader = new FileReader();
+					Name = document.getElementById('NameBox').value;
+					var Content = "<span id='NameArea'>Uploading " + SelectedFile.name + " as " + Name + "</span>";
+					Content += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">50%</span>';
+                                        if (SelectedFile.size/1000 < 1.0) {
+					   Content += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize + " B</span>";
+                                        } else {
+                                           Content += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize / 1000000.0 + " MB</span>";
+                                        };
+					document.getElementById('UploadArea').innerHTML = Content;
+                                        
+                                        ws.send(JSON.stringify({'Start': { 'Name' : Name, 'Size' : fileSize }}));
+                                        totalChunks = Math.ceil((fileSize/chunkSize), chunkSize);
+                                        //console.log(totalChunks)
+                                        sPR = 0;
+                                        PR = (fileSize/totalChunks)/1000000.0
+                                        UpdateBar(0);
+                                        console.log("Event Start");
+					
+                                        
+				}
+				else
+				{
+					alert("need to select a file");
+				}
+			}
+
+			function UpdateBar(percent){
+                                document.getElementById('ProgressBar').style.width = percent + '%';
+				document.getElementById('percent').innerHTML = (Math.round(percent*100.0)/100.0) + '%';
+                                //var MBDone = Math.round(((percent/100.0) * SelectedFile.size) / 1048576.0)   
+                                sPR = sPR + PR;                  
+                                var MBDone = sPR-PR;
+
+				document.getElementById('MB').innerHTML = MBDone;
+			}
+
+                        var chunkSize = 1024.0 * 1024.0;
+                        var currentChunk = 1.0;
+                        var totalChunks;
+                        ws.onmessage = function(data) {
+                    			var message_data = JSON.parse(data.data);
+                    			console.log(message_data)
+	                            if (currentChunk <= totalChunks) {
+	                                    
+	                                    var offset = (currentChunk-1.0) * chunkSize;
+	                                    
+	                                    var currentFilePart = SelectedFile.slice(offset, (offset+chunkSize));
+	                                    var reader = new FileReader();
+	                                    reader.onload = function (e) {
+	                                           //console.log("ReadeR", offset/1000000.0 )//, e.target.result);
+	                                           UpdateBar(Math.ceil((currentChunk*100.0)/totalChunks));
+	                                           ws.send(JSON.stringify({'Upload': { 'Name' : 'more', 'Data' : e.target.result }}));
+	                                           currentChunk++;
+	                                    }
+	                                    reader.readAsDataURL(currentFilePart) //readAsText(currentFilePart)//, "UTF-8")
+	                                    //readAsBinaryString(currentFilePart);
+	                                    //console.log("Event Upload", currentFilePart);
+	                                    //currentChunk++;
+	                                    //ws.send(JSON.stringify({'Upload': { 'Name' : 'st', 'Data' : "SSS" }}));
+	                             
+                        } else if (message_data["O"]=="O") {
+                    	t_el.style.display = "none";
+						var arrayBuffer = message_data.data;
+						console.log(">>>>", arrayBuffer)
+						//var blob  = new Blob([new Uint8Array(arrayBuffer)], {type: "image/jpeg"});
+						img.src = "data:image/png;base64," + arrayBuffer;
+						//window.URL.createObjectURL(blob);
+
+						var end_time = performance.now();
+						var current_time = end_time - start_time;
+						// smooth with moving average
+						time = (time * time_smoothing) + (current_time * (1.0 - time_smoothing));
+						start_time = end_time;
+						var fps = Math.round(1000 / time);
+
+						var current_request_time = performance.now() - request_start_time;
+						// smooth with moving average
+						request_time = (request_time * request_time_smoothing) + (current_request_time * (1.0 - request_time_smoothing));
+						var timeout = Math.max(0, target_time - request_time);
+						//console.log(timeout);
+						//setTimeout(ws.send(JSON.stringify({'Load': 'ok'})), timeout);  
+                         
+                         } else if (message_data["O"]=="Done") {    
+                                 t_el.style.display = "none";
+                                let test = SelectedFile.name.split(".").pop();
+                                if (test == "mp4") {
+                                	console.log("HELLOOW", SelectedFile, test)
+                                	const canvas = document.querySelector("canvas");
+									const ctx = canvas.getContext("2d");
+									const video = document.querySelector("video");
+									var fileUrl = window.URL.createObjectURL(SelectedFile);
+									video.src = fileUrl
+
+									video.addEventListener('play', () => {
+									  function step() {
+										ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+										requestAnimationFrame(step)
+									  }
+									  requestAnimationFrame(step);
+									})
+                                	
+                                	
+                                	
+                                }
+                                
+                                
+                                } else {
+                                		
+                                        console.log("Event Done", );
+                                        document.getElementById('UploadBox').style.display = "none";
+                                        t_el.style.display = "block";
+                                        ws.send(JSON.stringify({'Done': { 'Name' : 'more', 'Data' : "SSS" }}));
+                                        
+                                } 
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+                                
+
+                                
+                                
+                                
+                        };
+
+
+
+		</script>
+		<style type="text/css" media="screen">
+
+
+h2 {
+	font-size: 40px;
+	margin-top: 6px;
+	margin-bottom: 10px;
+}
+
+#Thumb {
+	max-width: 230px;
+	max-height: 130px;
+}
+
+#ProgressContainer {
+	width: 396px;
+	height: 36px;
+	background: #F8F8F8;
+	margin-top: 14px;
+	border: 1px solid #E8E8E8;
+	border-top: 1px solid #D8D8D8;
+
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	padding: 2px;
+}
+
+#ProgressBar {
+	height: 100%;
+	width: 0%;
+
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	background: #507299;
+}
+
+#UploadBox {
+    font-family: Arial;
+	background: #FFF;
+	padding: 20px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -200px;
+	margin-top: -150px;
+	height: 200px;
+	width: 400px;
+	border: 1px solid #DFDFDF;
+
+	-webkit-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+	-moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+	box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+
+	-webkit-border-radius: 11px;
+	-moz-border-radius: 11px;
+	border-radius: 11px;
+}
+
+button.Button {
+    font-size: 18px;
+    color: #ffffff;
+    padding: 8px 30px;
+    background: #507299;
+    -moz-border-radius: 5px;
+    border-radius: 6px;
+    border: none;
+    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    margin: 15px auto;
+    display: block;
+    cursor: pointer;
+}
+input {
+	margin-top: 10px;
+	margin-bottom: 8px;
+}
+
+input[type=text] {
+	border: 1px solid #CDCDCD;
+	border-top: 1px solid #676767;
+
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	font-size: 18px;
+	padding: 2px;
+	width: 300px;
+	margin-left: 10px;
+}
+img#liveImg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+#loader {
+border: 16px solid #f3f3f3; /* Light grey */
+border-top: 16px solid #8d9daf; /* Blue  #3498db;*/
+border-radius: 50%;
+width: 120px;
+height: 120px;
+margin: 10% auto;
+animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+		</style>
+<body style="margin: 0;color: #9d9d9d;background: #fafafa!important;font-family:Arial;">
+		<div id="UploadBox">
+			<h2>Uploader</h2>
+			<span id='UploadArea'>
+				<label for="FileBox">select a file: </label><input type="file" id="FileBox"><br>
+				<label for="NameBox">name file: </label><input type="text" id="NameBox" placeholder="name file"><br>
+				<button	type='button' id='UploadButton' class='Button'>Upload</button>
+			</span>
+		</div>
+    </body>
+

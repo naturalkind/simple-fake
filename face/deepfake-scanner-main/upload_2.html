@@ -1,0 +1,407 @@
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<title>Uploader</title>
+		<div id="loader"></div>
+		<div id="video-box">
+			<video controls id="video"></video>
+			<canvas></canvas>
+			
+			
+			<ul id="video-controls" class="controls">
+			   <li><button id="playpause" type="button">Play/Pause</button></li>
+			   <li><button id="stop" type="button">Stop</button></li>
+			   <li class="progress">
+				  <progress id="progress" value="0" min="0">
+					 <span id="progress-bar"></span>
+				  </progress>
+			   </li>
+			   <li><button id="mute" type="button">Mute/Unmute</button></li>
+			   <li><button id="volinc" type="button">Vol+</button></li>
+			   <li><button id="voldec" type="button">Vol-</button></li>
+			</ul>
+			
+		</div>
+		<script type="text/javascript" charset="utf-8">
+			var t_el = document.getElementById("loader");
+			t_el.style.display = "none";
+		
+			var img = document.getElementById("video");
+			img.style.display = "none";
+			
+			var target_fps = 24;
+
+			var request_start_time = performance.now();
+			var start_time = performance.now();
+			var time = 0;
+			var request_time = 0;
+			var time_smoothing = 0.9; // larger=more smoothing
+			var request_time_smoothing = 0.2; // larger=more smoothing
+			var target_time = 1000 / target_fps;
+			
+			//------------------------------->
+			const canvas = document.querySelector("canvas");
+			const ctx = canvas.getContext("2d");
+			const video = document.querySelector("video");			
+
+			
+			var videoControls = document.getElementById('video-controls');
+			videoControls.style.display = 'none';
+			
+			var playpause = document.getElementById('playpause');
+			var stop = document.getElementById('stop');
+			var mute = document.getElementById('mute');
+			var volinc = document.getElementById('volinc');
+			var voldec = document.getElementById('voldec');
+			var progress = document.getElementById('progress');
+			var progressBar = document.getElementById('progress-bar');
+			var fullscreen = document.getElementById('fs');			
+			
+			playpause.addEventListener('click', function(e) {
+			   if (video.paused || video.ended) video.play();
+			   else video.pause();
+			});
+			
+			
+			stop.addEventListener('click', function(e) {
+			   video.pause();
+			   video.currentTime = 0;
+			   progress.value = 0;
+			});	
+			
+			mute.addEventListener('click', function(e) {
+			   video.muted = !video.muted;
+			});	
+			volinc.addEventListener('click', function(e) {
+			   alterVolume('+');
+			});
+			voldec.addEventListener('click', function(e) {
+			   alterVolume('-');
+			});			
+			var alterVolume = function(dir) {
+			   var currentVolume = Math.floor(video.volume * 10) / 10;
+			   if (dir === '+') {
+				  if (currentVolume < 1) video.volume += 0.1;
+			   }
+			   else if (dir === '-') {
+				  if (currentVolume > 0) video.volume -= 0.1;
+			   }
+			}			
+			video.addEventListener('loadedmetadata', function() {
+			   progress.setAttribute('max', video.duration);
+			});			
+			video.addEventListener('timeupdate', function() {
+			   progress.value = video.currentTime;
+			   progressBar.style.width = Math.floor((video.currentTime / video.duration) * 100) + '%';
+			});		
+			
+			video.addEventListener('timeupdate', function() {
+			   if (!progress.getAttribute('max')) progress.setAttribute('max', video.duration);
+			   progress.value = video.currentTime;
+			   progressBar.style.width = Math.floor((video.currentTime / video.duration) * 100) + '%';
+			});		
+			
+			
+			progress.addEventListener('click', function(e) {
+			   var rect = this.getBoundingClientRect();
+			   var pos = (e.pageX  - rect.left) / this.offsetWidth;
+			   video.currentTime = pos * video.duration;
+			});		
+
+
+			//---------------------------------->
+			
+			window.addEventListener("load", Ready);
+			
+			function Ready(){
+				if(window.File && window.FileReader){ //These are the necessary HTML5 objects the we are going to use
+					document.getElementById('UploadButton').addEventListener('click', StartUpload);
+					document.getElementById('FileBox').addEventListener('change', FileChosen);
+				}
+				else
+				{
+					document.getElementById('UploadArea').innerHTML = "Your Browser Doesn't Support The File API Please Update Your Browser";
+				}
+			}
+			var SelectedFile;
+			var Name;
+                        var fileSize;
+                        var ws = new WebSocket("ws://178.158.131.41:8008/websocket"); // IP
+                        var PR;
+                        var sPR;
+
+			function FileChosen(evnt) {
+		                SelectedFile = evnt.target.files[0];
+				document.getElementById('NameBox').value = SelectedFile.name;
+                                fileSize = SelectedFile.size;
+
+		        }
+
+
+			
+                        //ws.binaryType = 'arraybuffer';
+                        ws.onopen = function() {
+                            console.log("connection was established");
+                        };
+
+
+			function StartUpload(){
+				if(document.getElementById('FileBox').value != "")
+				{
+					//FReader = new FileReader();
+					Name = document.getElementById('NameBox').value;
+					var Content = "<span id='NameArea'>Uploading " + SelectedFile.name + " as " + Name + "</span>";
+					Content += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">50%</span>';
+                                        if (SelectedFile.size/1000 < 1.0) {
+					   Content += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize + " B</span>";
+                                        } else {
+                                           Content += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize / 1000000.0 + " MB</span>";
+                                        };
+					document.getElementById('UploadArea').innerHTML = Content;
+                                        
+                                        ws.send(JSON.stringify({'Start': { 'Name' : Name, 'Size' : fileSize }}));
+                                        totalChunks = Math.ceil((fileSize/chunkSize), chunkSize);
+                                        //console.log(totalChunks)
+                                        sPR = 0;
+                                        PR = (fileSize/totalChunks)/1000000.0
+                                        UpdateBar(0);
+                                        console.log("Event Start");
+					
+                                        
+				}
+				else
+				{
+					alert("need to select a file");
+				}
+			}
+
+			function UpdateBar(percent){
+                                document.getElementById('ProgressBar').style.width = percent + '%';
+				document.getElementById('percent').innerHTML = (Math.round(percent*100.0)/100.0) + '%';
+                                //var MBDone = Math.round(((percent/100.0) * SelectedFile.size) / 1048576.0)   
+                                sPR = sPR + PR;                  
+                                var MBDone = sPR-PR;
+
+				document.getElementById('MB').innerHTML = MBDone;
+			}
+
+                        var chunkSize = 1024.0 * 1024.0;
+                        var currentChunk = 1.0;
+                        var totalChunks;
+                        ws.onmessage = function(data) {
+                    			var message_data = JSON.parse(data.data);
+                    			console.log(message_data)
+	                            if (currentChunk <= totalChunks) {
+	                                    
+	                                    var offset = (currentChunk-1.0) * chunkSize;
+	                                    
+	                                    var currentFilePart = SelectedFile.slice(offset, (offset+chunkSize));
+	                                    var reader = new FileReader();
+	                                    reader.onload = function (e) {
+	                                           //console.log("ReadeR", offset/1000000.0 )//, e.target.result);
+	                                           UpdateBar(Math.ceil((currentChunk*100.0)/totalChunks));
+	                                           ws.send(JSON.stringify({'Upload': { 'Name' : 'more', 'Data' : e.target.result }}));
+	                                           currentChunk++;
+	                                    }
+	                                    reader.readAsDataURL(currentFilePart) //readAsText(currentFilePart)//, "UTF-8")
+	                                    //readAsBinaryString(currentFilePart);
+	                                    //console.log("Event Upload", currentFilePart);
+	                                    //currentChunk++;
+	                                    //ws.send(JSON.stringify({'Upload': { 'Name' : 'st', 'Data' : "SSS" }}));
+	                             
+                        } else if (message_data["O"]=="Done") {    
+                                t_el.style.display = "none";
+                                videoControls.style.display = 'block';
+                                //img.style.display = "block"
+                                let test = SelectedFile.name.split(".").pop();
+                                if (test == "mp4") {
+                                	console.log("HELLOOW", SelectedFile, test, message_data)
+                                	//const canvas = document.querySelector("canvas");
+									//const ctx = canvas.getContext("2d");
+									//const video = document.querySelector("video");
+									var fileUrl = window.URL.createObjectURL(SelectedFile);
+									video.src = fileUrl;
+									let curTime, idx_cord;
+									video.addEventListener('play', () => {
+										console.log(video.videoWidth, video.videoHeight)
+										canvas.width = video.videoWidth;
+										canvas.height = video.videoHeight;
+									  function step() {
+										ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+										
+										curTime = video.currentTime;
+										idx_cord = Math.round(curTime*message_data["fps"]);
+										console.log(idx_cord);
+										
+										ctx.beginPath();
+										ctx.lineWidth = 7;
+										ctx.strokeStyle = 'yellow';
+										let c_temp = message_data["coord"][idx_cord];
+										
+										ctx.rect(c_temp[0]-30, c_temp[1]-30, (c_temp[2]-c_temp[0])+30, (c_temp[3]-c_temp[1])+30);
+										ctx.stroke();
+										
+										ctx.beginPath();
+										ctx.font = "48px serif";
+										ctx.fillStyle = 'yellow';
+										ctx.fillText(message_data["all_preds"][idx_cord], c_temp[2]+20, c_temp[3]+20);
+										ctx.stroke();
+										
+										ctx.beginPath();
+										ctx.font = "48px serif";
+										ctx.fillStyle = message_data["color"];
+										ctx.fillText(message_data["text"], 40, 40);										
+										ctx.stroke();
+										
+										requestAnimationFrame(step)
+									  }
+									  requestAnimationFrame(step);
+									})
+                                	
+                                	
+                                	
+                                }
+                                
+                                
+                                } else {
+                                		
+                                        console.log("Event Done", );
+                                        document.getElementById('UploadBox').style.display = "none";
+                                        t_el.style.display = "block";
+                                        ws.send(JSON.stringify({'Done': { 'Name' : 'more', 'Data' : "SSS" }}));
+                                        
+                                } 
+                                
+                                
+                        };
+
+
+
+		</script>
+		<style type="text/css" media="screen">
+
+
+h2 {
+	font-size: 40px;
+	margin-top: 6px;
+	margin-bottom: 10px;
+}
+
+#Thumb {
+	max-width: 230px;
+	max-height: 130px;
+}
+
+#ProgressContainer {
+	width: 396px;
+	height: 36px;
+	background: #F8F8F8;
+	margin-top: 14px;
+	border: 1px solid #E8E8E8;
+	border-top: 1px solid #D8D8D8;
+
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	padding: 2px;
+}
+
+#ProgressBar {
+	height: 100%;
+	width: 0%;
+
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	background: #507299;
+}
+
+#UploadBox {
+    font-family: Arial;
+	background: #FFF;
+	padding: 20px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -200px;
+	margin-top: -150px;
+	height: 200px;
+	width: 400px;
+	border: 1px solid #DFDFDF;
+
+	-webkit-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+	-moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+	box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+
+	-webkit-border-radius: 11px;
+	-moz-border-radius: 11px;
+	border-radius: 11px;
+}
+
+button.Button {
+    font-size: 18px;
+    color: #ffffff;
+    padding: 8px 30px;
+    background: #507299;
+    -moz-border-radius: 5px;
+    border-radius: 6px;
+    border: none;
+    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    margin: 15px auto;
+    display: block;
+    cursor: pointer;
+}
+input {
+	margin-top: 10px;
+	margin-bottom: 8px;
+}
+
+input[type=text] {
+	border: 1px solid #CDCDCD;
+	border-top: 1px solid #676767;
+
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	font-size: 18px;
+	padding: 2px;
+	width: 300px;
+	margin-left: 10px;
+}
+canvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+video#video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+#loader {
+border: 16px solid #f3f3f3; /* Light grey */
+border-top: 16px solid #8d9daf; /* Blue  #3498db;*/
+border-radius: 50%;
+width: 120px;
+height: 120px;
+margin: 10% auto;
+animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+		</style>
+<body style="margin: 0;color: #9d9d9d;background: #fafafa!important;font-family:Arial;">
+		<div id="UploadBox">
+			<h2>Uploader</h2>
+			<span id='UploadArea'>
+				<label for="FileBox">select a file: </label><input type="file" id="FileBox"><br>
+				<label for="NameBox">name file: </label><input type="text" id="NameBox" placeholder="name file"><br>
+				<button	type='button' id='UploadButton' class='Button'>Upload</button>
+			</span>
+		</div>
+    </body>
+
