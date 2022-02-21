@@ -75,6 +75,7 @@ while data != '':
         norm_melspec = pwr_to_db(melspec, ref=np.max)
         #print (melspec.shape, norm_melspec.shape)
         frames.append(norm_melspec)
+        
         if len(frames) == 20:
 
             stack = np.hstack(frames)
@@ -112,7 +113,7 @@ while data != '':
             img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
             buf.close()
             img = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
-            print (img.shape)
+            print (img.shape, len(frames))
             out.write(img)
             
             plt.pause(0.0001)
