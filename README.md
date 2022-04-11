@@ -101,6 +101,7 @@ https://github.com/CorentinJ/Real-Time-Voice-Cloning
 https://github.com/jackaduma/CycleGAN-VC3    
 https://github.com/GANtastic3/MaskCycleGAN-VC    
 https://github.com/smoke-trees/Voice-synthesis    
+https://github.com/engmubarak48/Face-Recognition-System    
 
 ### CLI Shortuct 
 python3 -m mask_cyclegan_vc.test     --name mask_cyclegan_vc_VCC2SF3_VCC2TF1     --save_dir results/     --preprocessed_data_dir vcc2018_preprocessed/vcc2018_training     --gpu_ids 0     --speaker_A_id VCC2SM5     --speaker_B_id SF3     --ckpt_dir results/mask_cyclegan_vc_VCC2SF3_VCC2TF1/ckpts     --load_epoch 800  --model_name generator_B2A     
