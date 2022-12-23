@@ -1,0 +1,1144 @@
+<html>
+    <head>
+        <script src="https://unpkg.com/wavesurfer.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600' rel='stylesheet' type='text/css'>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>Deepfake Detector</title>
+    </head>
+    <div class="testbox" id="testbox">
+        <label id="icon" for="name" style="margin: 10px;" class="icon_back"><i class="icon-chevron-left"></i></label>
+        <a href="https://b24cyber.com" target="_blank" id="logo24">
+           <img width="140" height="140" src="/B24CYBER-2-768x768.png">    
+        </a>    
+        <div id="reg">
+            <form action="/">
+                <hr>
+                <div id="next_step_reg">
+                    <label id="icon" for="name"><i class="icon-user"></i></label>
+                    <input type="text" name="name" id="name_name" placeholder="Name" required/>
+
+                    <label id="icon" for="name"><i class="icon-shield"></i></label>
+                    <input type="password" name="name" id="name_pass" placeholder="Password" required/>
+
+                    <label id="icon" for="name"><i class="icon-envelope "></i></label>
+                    <input type="text" name="name" id="name_mail" placeholder="Email" required/>
+
+                    <label id="icon" for="name"><i class="icon-phone"></i></label>
+                    <input type="text" name="name" id="name_phone" placeholder="Phone" required/>  
+                    <img id="liveImg"/>
+                </div>
+                <div id="start_step_reg">  
+                    <p>facial registration requires 8 seconds of recording</p>
+                    <label id="icon" for="FileBox_reg" ><i class="icon-facetime-video"></i></label>
+                    <input type="file" id="FileBox_reg" name="FileBox_reg" accept="video/*">
+                    <input type="text" id="NameBox_reg" placeholder="name file" required/>
+                </div>
+                <span id='UploadArea_reg'></span>
+                <hr>  
+                <p id="InfoReg">By clicking Register, you agree on our <a href="#">terms and condition</a>.</p>
+                <a href="#" class="button" id="Register">Register</a>
+                <a href="#" class="button" id="Confirm">Confirm</a>
+           </form>
+        </div>
+
+    <!--        -->
+        
+        <div id="log">
+            <form action="/">
+                <hr>
+                <h2>Deepfake Detector</h2>
+                <p>entry with face requires 8 seconds of recording</p>
+                <span id='UploadArea'>
+                    <div id="name_pwd">    
+                        <label id="icon" for="name"><i class="icon-shield"></i></label>
+                        <input type="password" name="name" id="name" placeholder="Password" required/>
+                    </div>
+                    <label id="icon" for="FileBox" style="margin: 10px;" class="FileBox_L"><i class="icon-download-alt"></i></label>
+                    <input type="file" id="FileBox" name="FileBox" accept="video/*">
+                    <input type="text" id="NameBox" placeholder="name file"><br>
+                    <button    type='button' id='UploadButton' class='Button'>scan</button>
+                </span>
+                <hr>
+            </form>    
+        </div>
+        <button type='button' class='Button' id="reg_bt">REGISTRATION</button>
+        <button type='button' class='Button' id="log_bt">LOGIN</button>
+        <button type='button' class='Button' id="idk_bt">USER IDENTIFICATION KEYSTROKE</button>
+    </div>
+    <div id="InfoUser">
+        <div id="text_user_info">
+            <span id="NameUser">User name: </span>
+            <span id="PasswordUser">Password user: </span>
+        </div>
+        <div id="UserImage"></div>    
+    </div>
+    <div id="video-box">
+        <div id="block-v">
+            <canvas id="canvas_"></canvas>
+        </div>
+        <div id="video-controls" class="controls">
+            <div id="playpause" class='play-btn paused'></div>
+<!--            <button id="playpause" type="button">Play/Pause</button>-->
+<!--               <div id="playpause" class='play-btn paused'></div>-->
+            <div id="waveform"></div>
+        </div>
+        <ul id="info_file_video">
+            <h3>Video</h3>
+        </ul>
+        <ul id="info_file_audio">
+            <h3>Audio</h3>
+        </ul>
+    </div>    
+
+<!--<div id="loader"></div>-->
+<video controls id="video"></video>
+
+<script type="text/javascript" charset="utf-8">
+document.getElementById('InfoUser').style.display = "none";
+
+var icon_back = document.getElementsByClassName("icon_back");
+icon_back[0].style.display = "none";
+
+var next_step_reg = document.getElementById("next_step_reg");
+next_step_reg.style.display = "none";
+
+var start_step_reg = document.getElementById("start_step_reg");
+start_step_reg.style.display = "block";
+
+var name_pwd = document.getElementById("name_pwd");
+name_pwd.style.display = "none";
+
+var login = document.getElementById("log");
+var registration = document.getElementById("reg");
+login.style.display = "none";
+registration.style.display = "none";
+
+
+var idk_block = document.createElement("div");
+idk_block.id = "idl-block";
+idk_block.style.display = "none";
+idk_block.innerHTML = `<p><b>Name:</b><br>
+                       <input type="text" size="40" id="Name_ABC">
+                       <h3>Enter this message:</h3>
+                       <p>theory theory theory</p> 
+                       <div id="text_input" class="message_textarea" role="textbox" contenteditable="true" aria-multiline="true" aria-required="true" style="background: white;font-size: 26px;margin: 9px auto;"></div><button type="button" onclick="save_test(this)" indicator="save">SAVE</button><button type="button" onclick="send_test(this)" indicator="send">SEND</button>`
+// Теория - это когда все известно, но ничего не работает                       
+// <button type="button" onclick="send_test()">SEND</button>                       
+document.getElementById("testbox").appendChild(idk_block);
+
+var text_input = document.getElementById("text_input");
+
+var keyTimes = {};
+var arr = [];
+text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = handle;
+function handle(e) {
+    //console.log("WALL KEYPRESS", e, e.type, keyTimes);
+    if (e.type == "keydown") {
+        if (!keyTimes["key" + e.which]) {
+            keyTimes["key" + e.which] = new Date().getTime();
+        }    
+    } else if (e.type == "keyup") {
+        if (keyTimes["key" + e.which]) {
+            var x = new Date().getTime() - keyTimes["key" + e.which];
+            //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
+            arr.push({"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode});
+            delete keyTimes["key" + e.which];
+            //console.log(e.key, x / 1000.0);
+        }   
+    }
+}
+function recording_key() {
+    console.log('tick', arr)
+    ws.send(JSON.stringify({'KEYPRESS': arr}));
+    arr.length = 0 // удаляет все
+    //arr = [];
+    //keyTimes = {};
+}
+
+setInterval(recording_key, 1000);
+
+function save_test(self) {
+    var NameABC = document.getElementById("Name_ABC").value;
+    ws.send(JSON.stringify({'save_test': 'ok', 'NameABC':NameABC}));
+    text_input.innerText = "";
+} 
+function send_test(self) {
+    ws.send(JSON.stringify({'send_test': 'ok'}));
+}
+
+var reg_bt = document.getElementById("reg_bt");
+var log_bt = document.getElementById("log_bt");
+var idk_bt = document.getElementById("idk_bt");
+reg_bt.style.margin = "4px auto";
+log_bt.style.margin = "4px auto";
+idk_bt.style.margin = "4px auto";
+
+idk_bt.addEventListener('click', function(e) {
+    idk_block.style.display = "block";
+    registration.style.display = "none";
+    // кнопки
+    reg_bt.style.display = "none";
+    log_bt.style.display = "none";
+    idk_bt.style.display = "none";
+    // кнопка назад
+    icon_back[0].style.display = "block"
+});
+
+
+reg_bt.addEventListener('click', function(e) {
+    registration.style.display = "block";
+    reg_bt.style.display = "none";
+    log_bt.style.display = "none";
+    idk_bt.style.display = "none";
+    // кнопка назад
+    icon_back[0].style.display = "block"
+});
+
+
+log_bt.addEventListener('click', function(e) {
+    login.style.display = "block";
+    reg_bt.style.display = "none";
+    log_bt.style.display = "none";
+    idk_bt.style.display = "none";
+    // кнопка назад    
+    icon_back[0].style.display = "block"
+});        
+icon_back[0].addEventListener('click', function(e) {
+    // кнопка назад 
+    icon_back[0].style.display = "none"
+    // кнопки
+    reg_bt.style.display = "block";
+    log_bt.style.display = "block";
+    idk_bt.style.display = "block";
+    
+    login.style.display = "none";
+    registration.style.display = "none";
+    idk_block.style.display = "none";
+});    
+
+var wavesurfer = WaveSurfer.create({
+    container: '#waveform',
+    waveColor: '#9d9d9d', //'violet',
+    progressColor:  '#507299', //'purple'
+    cursorColor: '#507299',
+    cursorWidth: 3,
+    autoCenter: true,
+    //backgroundColor: '#507299'
+});
+
+
+
+//var t_el = document.getElementById("loader");
+var t_el = document.createElement("div");
+t_el.id = "loader";
+t_el.style.display = "block";
+
+var img = document.getElementById("video");
+img.muted = true;
+img.style.display = "none";
+
+var info_file_audio = document.getElementById("info_file_audio");
+info_file_audio.style.display = "none";
+var info_file_video = document.getElementById("info_file_video");
+info_file_video.style.display = "none";
+//------------------------------->
+//const canvas_ = document.querySelector("canvas");
+const canvas_ = document.getElementById("canvas_");
+canvas_.style.display = "none";
+const ctx = canvas_.getContext("2d");
+const video = document.querySelector("video");            
+
+
+const video_box = document.getElementById("video-box");
+
+
+var videoControls = document.getElementById('video-controls');
+videoControls.style.display = 'none';
+
+document.getElementById('Confirm').style.display = "none";
+
+var playpause = document.getElementById('playpause');
+            
+    function togglePlay() {
+    wavesurfer.pause()
+    playpause.classList.toggle('paused');
+}    
+
+function togglePlayBtn() {
+    playpause.classList.toggle('playing');
+    
+}    
+
+    
+playpause.addEventListener('click', function(e) {
+   if (video.paused || video.ended) video.play();
+   else video.pause();
+});
+
+
+playpause.addEventListener('click', togglePlay);
+playpause.addEventListener('play', togglePlayBtn);    
+
+wavesurfer.on('seek', function (position) {
+    var currentTime = position * wavesurfer.getDuration();
+    video.currentTime = currentTime
+});            
+
+//---------------------------------->
+
+window.addEventListener("load", Ready);
+
+function Ready(){
+    if(window.File && window.FileReader){ //These are the necessary HTML5 objects the we are going to use
+        document.getElementById('UploadButton').addEventListener('click', StartUpload);
+        document.getElementById('FileBox').addEventListener('change', FileChosen);
+        document.getElementById('FileBox_reg').addEventListener('change', FileChosen_reg);
+        document.getElementById('Register').addEventListener('click', UploadReg);
+        document.getElementById('Confirm').addEventListener('click', Register);
+    }
+    else
+    {
+        document.getElementById('UploadArea').innerHTML = "Your Browser Doesn't Support The File API Please Update Your Browser";
+    }
+}
+var img = document.getElementById("liveImg");
+var SelectedFile;
+var Name;
+var fileSize;
+var ws = new WebSocket("ws://178.158.131.41:8998/websocket"); // IP
+var PR;
+var sPR;
+var Type_Evt;
+var test_video_file;
+var Kef;
+
+//---------------------------------->
+function Register() {
+    console.log("Confirm......", 
+                 document.getElementById('name_name').value,
+                 document.getElementById('name_pass').value,
+                 document.getElementById('name_mail').value,
+                 document.getElementById('name_phone').value)
+    ws.send(JSON.stringify({'Register': { 'Name' : document.getElementById('name_name').value,
+                                          'Pass' : document.getElementById('name_pass').value,
+                                          'Phone': document.getElementById('name_phone').value,
+                                          'Mail': document.getElementById('name_mail').value}}));
+}
+
+
+function UploadReg() {
+    if(document.getElementById('FileBox_reg').value != "")
+    {
+        //document.getElementById("testbox").style.display = "none";
+        //FReader = new FileReader();
+        Type_Evt = "StartReg";
+        currentChunk = 1.0;
+        
+        Name = document.getElementById('NameBox_reg').value;
+            var Content = document.createElement("div");
+        Content.innerHTML = "<span id='NameArea'>Uploading " + SelectedFile.name;
+        Content.innerHTML += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">50%</span>';
+        if (SelectedFile.size/1000 < 1.0) {
+            Content.innerHTML  += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize + " B</span>";
+        } else {
+            Content.innerHTML  += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize / 1000000.0 + " MB</span>";
+        };
+        //document.getElementById('UploadArea').innerHTML += Content;
+        document.getElementById('UploadArea_reg').appendChild(Content);
+        
+        totalChunks = Math.ceil((fileSize/chunkSize), chunkSize);
+        sPR = 0;
+        PR = (fileSize/totalChunks)/1000000.0
+        UpdateBar(0);
+        console.log("Event Start");
+        start_step_reg.style.display = "none"; 
+        ws.send(JSON.stringify({'Start': { 'Name' : Name, 'Size' : fileSize }}));
+                          
+    }
+    else
+    {
+        alert("need to select a file");
+    }
+}
+function FileChosen_reg(evnt) {
+        
+        SelectedFile = evnt.target.files[0];
+        document.getElementById('NameBox_reg').value = SelectedFile.name;
+        fileSize = SelectedFile.size;
+        
+}       
+ 
+            
+//---------------------------------->
+function finishCopy() {
+    let tt = video.currentTime;
+    
+    var p_h_window = window.innerHeight*(20/100);  
+    var p_w_window = window.innerWidth*(20/100);
+    
+    var p_h_video = video.videoHeight*(20/100);  
+    var p_w_video = video.videoWidth*(20/100);
+    
+    Kef = Math.min(p_h_window, p_w_window)/Math.max(p_h_video, p_w_video);    
+    
+    canvas_.width = video.videoWidth*Kef;
+    canvas_.height = video.videoHeight*Kef;
+    ctx.drawImage(video, 0, 0, canvas_.width, canvas_.height)
+    
+    document.getElementById('waveform').style.width=canvas_.width-130;
+    videoControls.style.width=canvas_.width;
+    video_box.style.width=canvas_.width;
+    wavesurfer.drawBuffer(); 
+    
+}
+
+
+function FileChosen(evnt) {
+
+        console.log("Event FileChosen");
+        SelectedFile = evnt.target.files[0];
+        document.getElementById('NameBox').value = SelectedFile.name;
+        fileSize = SelectedFile.size;
+        
+        console.log(window.screen.height, window.screen.width, 
+                    window.innerHeight, window.innerWidth)
+
+        test_video_file = SelectedFile.name.split(".").pop();
+        if (test_video_file.toLocaleLowerCase() == "mp4") {
+        
+            var fileUrl = window.URL.createObjectURL(SelectedFile);
+            wavesurfer.load(fileUrl);
+            video.src = fileUrl;
+            video.addEventListener('loadedmetadata', x => video.currentTime = 0);
+            video.addEventListener('seeked', x => finishCopy()); 
+        
+        }
+}
+                
+                
+//ws.binaryType = 'arraybuffer';
+ws.onopen = function() {
+    console.log("connection was established");
+};
+
+
+function StartUpload(){
+    console.log("Event StartUpload", currentChunk, fileSize, totalChunks, PR);
+    if(document.getElementById('FileBox').value != "")
+    {
+        //document.getElementById("testbox").style.display = "none";
+        //FReader = new FileReader();
+        Type_Evt = "Enter";
+        currentChunk = 1.0;
+        
+        Name = document.getElementById('NameBox').value;
+        var Content = document.createElement("div");
+        Content.innerHTML = "<span id='NameArea'>Uploading " + SelectedFile.name;
+        Content.innerHTML += '<div id="ProgressContainer"><div id="ProgressBar"></div></div><span id="percent">50%</span>';
+        if (SelectedFile.size/1000 < 1.0) {
+            Content.innerHTML  += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize + " B</span>";
+        } else {
+            Content.innerHTML  += "<span id='Uploaded'> - <span id='MB'>0</span>/" + fileSize / 1000000.0 + " MB</span>";
+        };
+        //document.getElementById('UploadArea').innerHTML += Content;
+        document.getElementById('UploadArea').appendChild(Content);
+        
+        totalChunks = Math.ceil((fileSize/chunkSize), chunkSize);
+        sPR = 0;
+        PR = (fileSize/totalChunks)/1000000.0
+        UpdateBar(0);
+        ws.send(JSON.stringify({'Start': { 'Name' : Name, 'Size' : fileSize }}));
+                     
+    }
+    else
+    {
+        alert("need to select a file");
+    }
+}
+
+function UpdateBar(percent){
+    //console.log("UpdateBar", percent)
+    document.getElementById('ProgressBar').style.width = percent + '%';
+    document.getElementById('percent').innerHTML = (Math.round(percent*100.0)/100.0) + '%';
+    sPR = sPR + PR;                  
+    var MBDone = sPR-PR;
+    document.getElementById('MB').innerHTML = MBDone;
+}
+
+var chunkSize = 1024.0 * 1024.0;
+var currentChunk = 1.0;
+var totalChunks;
+
+
+
+ws.onmessage = function(data) {
+    var message_data = JSON.parse(data.data);
+    //console.log(message_data, currentChunk, totalChunks)
+    if (message_data["switch"] == "SendTest") {
+        console.log("SEND_TEST");
+        alert(message_data["NameABC"]);
+    } else if (message_data["switch"] == "MoreData") {
+        if (currentChunk <= totalChunks) {
+            var offset = (currentChunk-1.0) * chunkSize;
+            var currentFilePart = SelectedFile.slice(offset, (offset+chunkSize));
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                   UpdateBar(Math.ceil((currentChunk*100.0)/totalChunks));
+                   ws.send(JSON.stringify({'Upload': { 'Name' : 'more', 'Data' : e.target.result }}));
+                   currentChunk++;
+            }
+            reader.readAsDataURL(currentFilePart) //readAsText(currentFilePart)//, "UTF-8")
+         
+        } else {
+            console.log("Event Done", );
+            document.body.appendChild(t_el);
+            if (Type_Evt == "Enter") {
+                document.getElementById("testbox").style.display = "none";
+                //t_el.style.display = "block";
+            } else if (Type_Evt == "StartReg") {
+                document.getElementById("testbox").style.display = "none";
+                //t_el.style.display = "block";
+            }
+            
+            ws.send(JSON.stringify({'Done': { 'Type_Evt' : Type_Evt }}));
+        
+        }
+    } else if (message_data["switch"]=="Done") { 
+        document.getElementById('UploadArea').removeChild(document.getElementById('UploadArea').lastElementChild)   
+        document.body.removeChild(t_el);
+        //t_el.style.display = "none";
+        videoControls.style.display = 'block';
+        canvas_.style.display = "block";
+        img.style.display = "block"
+        
+        if (message_data["info_dict"] != 0) {
+            document.getElementById('InfoUser').style.display = "block";
+            document.getElementById("NameUser").innerHTML += "<span style='color:white;font-size:25px;'>" + message_data["info_dict"]["UserName"] +"</span>";
+            document.getElementById("PasswordUser").innerHTML += "<span style='color:white;font-size:25px;'>" + message_data["info_dict"]["Password"] +"</span>";
+            for (var i = 0; i < message_data["info_dict"]["CountImg"]; i++) {
+                   var t_img = new Image();
+                   t_img.src = "faces/"+ message_data["info_dict"]["ImageFace"] + "/"+ i + ".jpg";
+                   t_img.style.width = "100px";
+                   document.getElementById('UserImage').appendChild(t_img);
+            } 
+            
+
+        }
+        
+        if (test_video_file.toLocaleLowerCase() == "mp4") {
+            //const canvas = document.querySelector("canvas");
+            //const ctx = canvas.getContext("2d");
+            //const video = document.querySelector("video");
+            let curTime, idx_cord;
+            
+            var newDiv_3 = document.createElement("li");
+            newDiv_3.innerHTML = "video frame rate: " + message_data["fps"];
+            info_file_video.appendChild(newDiv_3);
+            
+            var newDiv_4 = document.createElement("li");
+            newDiv_4.innerHTML = "audio channel: " + message_data["channel_audio"];
+            info_file_audio.appendChild(newDiv_4);                                    
+            
+            var newDiv_5 = document.createElement("li");
+            newDiv_5.innerHTML = "audio rate: " + message_data["fps_audio"] + "Hz";
+            info_file_audio.appendChild(newDiv_5);    
+            
+            var newDiv_1 = document.createElement("li");
+            newDiv_1.innerHTML = "duration: " + message_data["duration"] + "seconds";
+            info_file_video.appendChild(newDiv_1);
+            
+            var newDiv_2 = document.createElement("li");
+            newDiv_2.innerHTML = "video resolution: " + message_data["resolution"];
+            info_file_video.appendChild(newDiv_2);                    
+            
+            
+            var IMG = document.createElement("img");
+            //IMG.style.maxWidth = window.innerWidth/2;
+            //info_file_audio.appendChild(IMG);    
+            //console.log(message_data["spectro"])
+            
+            info_file_video.style.display = "block";
+            info_file_audio.style.display = "block";
+
+            document.getElementById('waveform').style.width=canvas_.width-130;
+            videoControls.style.width=canvas_.width;
+            video_box.style.width=canvas_.width;  
+                         
+            wavesurfer.drawBuffer();    
+
+                                                
+            video.addEventListener('play', () => {
+                
+                finishCopy()                                       
+                wavesurfer.play();
+
+                function step() {
+                    ctx.drawImage(video, 0, 0, canvas_.width, canvas_.height)
+                    
+                    curTime = video.currentTime;
+                    idx_cord = Math.round(curTime*message_data["fps"]);
+                    
+                    IMG.src = "data:image/png;base64," + message_data["spectro"][ Math.round(curTime)];
+                    ctx.drawImage(IMG, canvas_.width-(IMG.width*Kef),
+                                       canvas_.height-(IMG.height*Kef), 
+                                       IMG.width*Kef, IMG.height*Kef);
+                    ctx.beginPath();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = message_data["color"];//'#507299';
+                    
+                    
+                    try  {
+                        let c_temp = message_data["coord"][idx_cord];
+                        //console.log(c_temp);
+                        ctx.rect(c_temp[0]*Kef-30, c_temp[1]*Kef-30, (c_temp[2]-c_temp[0])*Kef+30, (c_temp[3]-c_temp[1])*Kef+30);
+                        ctx.stroke();
+                        
+
+                        ctx.beginPath();
+                        ctx.font = "28px Helvetica";
+                        ctx.fillStyle = message_data["color"];//'#507299';
+                        ctx.fillText(message_data["all_preds"][idx_cord], c_temp[2]*Kef+20, c_temp[3]*Kef+20);
+                        ctx.stroke();
+                    
+                    } catch(e) {
+                    
+                    }
+                    ctx.beginPath();
+                    ctx.font = "28px Helvetica";
+                    ctx.fillStyle = message_data["color"];
+                    ctx.fillText(message_data["text"], 40*Kef, 40);                                        
+                    ctx.stroke(); 
+                    requestAnimationFrame(step)
+                }
+                requestAnimationFrame(step);
+            })
+        }
+
+    } else if (message_data["switch"]=="DoneReg") { 
+        document.getElementById("testbox").style.display = "block"; document.getElementById('UploadArea_reg').removeChild(document.getElementById('UploadArea_reg').lastElementChild)
+         var size_face = Object.keys(message_data["data"]).length;
+         //t_el.style.display = "none";
+         document.body.removeChild(t_el);
+         
+         console.log("DoneReg...", message_data, size_face);
+         for (var i = 0; i < size_face; i++) {
+               img.src = "data:image/png;base64," + message_data["data"][i];
+         } 
+         next_step_reg.style.display = "block";
+         //document.getElementById('Register').innerHTML = "Confirm"; 
+         document.getElementById('Register').style.display = "none";
+         document.getElementById('Confirm').style.display = "block";
+    } else if (message_data["switch"]=="Confirm") {
+        
+        registration.innerHTML = "<h3 style='text-align: center;margin: 4px;'>You are registered</h3>"
+    }
+        
+};
+
+</script>
+
+<style type="text/css" media="screen">
+
+.FileBox_L {
+cursor: pointer;
+position: relative;
+top: 0px;
+}
+.FileBox_L:hover {
+top: 3px;
+}
+
+ul#info_file_audio {
+    display: block;
+    float: left;
+    margin: 0 auto;
+    color: #e5e6e7;
+}
+
+ul#info_file_video {
+    display: block;
+    float: left;
+    margin: 0 auto;
+    color: #e5e6e7;
+}
+
+a#logo24{
+    display: block;
+    margin: 0 auto;
+    width: 140px;
+}
+
+h2 {
+    font-size: 40px;
+    margin-top: 6px;
+    margin-bottom: 10px;
+}
+
+#Thumb {
+    max-width: 230px;
+    max-height: 130px;
+}
+
+#ProgressContainer {
+    height: 36px;
+    background: #F8F8F8;
+    margin-top: 14px;
+    border: 1px solid #E8E8E8;
+    border-top: 1px solid #D8D8D8;
+
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+#ProgressBar {
+    height: 100%;
+    width: 0%;
+
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background: #507299;
+}
+
+#UploadBox {
+    font-family: Arial;
+    background: #FFF;
+    /* float: left; */
+    margin: 0 auto;
+    /* padding: 20px; */
+    position: relative;
+    /* top: 50%; */
+    /* left: 50%; */
+    /* margin-left: -200px; */
+    /* margin-top: -150px; */
+    /* height: 200px; */
+    /* width: 400px; */
+    border: 1px solid #DFDFDF;
+    -webkit-box-shadow: 0px 0px 16px 0px rgb(0 0 0 / 20%);
+    -moz-box-shadow: 0px 0px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 0px 16px 0px rgb(0 0 0 / 20%);
+    -webkit-border-radius: 11px;
+    -moz-border-radius: 11px;
+    border-radius: 11px;
+}
+
+
+body {
+    background-image: url(/b24cyber-cover-1.jpg);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    margin: 0;
+    color: #9d9d9d;
+    font-family:Arial;
+
+}
+
+
+
+button.Button {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 auto;
+    width: 100%;
+    color: #ffffff;
+    padding: 8px 30px;
+    background: #507299;
+    -moz-border-radius: 5px;
+    border-radius: 6px;
+    border: none;
+    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4);
+    /* margin: 15px auto; */
+    display: block;
+    cursor: pointer;
+    top: 0px;
+    position: relative;
+}
+
+button.Button:hover {
+  top: 3px;
+  background-color: #4d6b8f;
+  -webkit-box-shadow: none; 
+  -moz-box-shadow: none; 
+  box-shadow: none;
+}
+
+input {
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+input[type=text] {
+    border: 1px solid #CDCDCD;
+    border-top: 1px solid #676767;
+
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 18px;
+    padding: 2px;
+    width: 300px;
+    margin-left: 10px;
+}
+canvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+video#video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+div#waveform {
+    object-fit: cover;
+    margin-left: auto;
+    margin-right: auto;
+    float: left;
+<!--    width:1000px;-->
+}
+
+div#video-controls {
+    margin-left: auto;
+    margin-right: auto;
+    float: left;
+    position: relative;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+}
+
+
+button {
+}
+.play-btn {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    float: left;
+    margin: 35px;
+    transform: rotate(-90deg) scale(0.8);
+    transition: -webkit-clip-path 0.3s ease-in 0.1s, shape-inside 0.3s ease-in 0.1s,
+        transform 0.8s cubic-bezier(0.85, -0.25, 0.25, 1.425);
+}
+.play-btn.paused {
+    transform: rotate(0deg);
+}
+.play-btn:before,
+.play-btn:after {
+    content: "";
+    position: absolute;
+    background: #507299;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    transition: inherit;
+}
+.play-btn:before {
+    -webkit-clip-path: polygon(0 10%, 100% 10%, 100% 40%, 0 40%);
+    shape-inside: polygon(0 10%, 100% 10%, 100% 40%, 0 40%);
+}
+.play-btn:after {
+    -webkit-clip-path: polygon(0 60%, 100% 60%, 100% 90%, 0 90%);
+    shape-inside: polygon(0 60%, 100% 60%, 100% 90%, 0 90%);
+}
+.play-btn.paused:before {
+    -webkit-clip-path: polygon(10% 0, 90% 51%, 90% 51%, 10% 51%);
+    shape-inside: polygon(0 0, 100% 51%, 100% 51%, 0 51%);
+}
+.play-btn.paused:after {
+    -webkit-clip-path: polygon(10% 49.5%, 80% 49.5%, 90% 49.5%, 10% 100%);
+    shape-inside: polygon(10% 49.5%, 80% 49.5%, 90% 49.5%, 10% 100%);
+}
+
+div#video-box {
+    position: relative;
+    display: block;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+
+div#block-v {
+    float: left;
+    display: block;
+    position: relative;
+}
+
+
+#loader {
+border: 16px solid #f3f3f3; /* Light grey */
+border-top: 16px solid #8d9daf; /* Blue  #3498db;*/
+border-radius: 50%;
+width: 120px;
+height: 120px;
+margin: 10% auto;
+animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+
+#testbox body, #testbox div, #testbox dl, #testbox dt, #testbox dd, #testbox ul, #testbox ol, #testbox li, #testbox h1, #testbox h2, #testbox h3, #testbox h4, #testbox h5, #testbox h6, 
+#testbox pre, #testbox form, #testbox fieldset, #testbox input, #testbox textarea, #testbox p, #testbox blockquote, #testbox th, #testbox td { 
+  padding:0;
+  margin:0;}
+
+#testbox fieldset, #testbox img {border:0}
+
+#testbox ol, #testbox ul, #testbox li {list-style:none}
+
+:focus {outline:none}
+
+#testbox input,
+#testbox textarea,
+#testbox select {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  color: #4c4c4c;
+}
+#testbox h2 {
+    color: white;
+    font-size: 32px;
+    margin-top: 6px;
+    margin-bottom: 0px;
+}
+
+#InfoReg {
+    font-size: 12px;
+    width: 150px;
+    display: inline-block;
+    margin-left: 18px;
+    margin-top: 10px;
+}
+#testbox h1 {
+  font-size: 32px;
+  font-weight: 300;
+  color: #4c4c4c;
+  text-align: center;
+  padding-top: 10px;
+  margin-bottom: 10px;
+}
+
+#testbox html{
+  background-color: #ffffff;
+}
+
+.testbox {
+  margin: 0 auto;
+  width: 343px; 
+  background-color: #405976; 
+<!--  background-color: #507299; margin: 20px auto;-->
+  -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
+  -moz-box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
+  box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
+  padding: 25px;
+}
+
+#testbox input[type=radio] {
+  visibility: hidden;
+}
+
+#testbox form{
+  margin: 0 30px;
+}
+
+#testbox label.radio {
+    cursor: pointer;
+  text-indent: 35px;
+  overflow: visible;
+  display: inline-block;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+#testbox label.radio:before {
+  background: #507299;
+  content:'';
+  position: absolute;
+  top:2px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+}
+
+#testbox label.radio:after {
+    opacity: 0;
+    content: '';
+    position: absolute;
+    width: 0.5em;
+    height: 0.25em;
+    background: transparent;
+    top: 7.5px;
+    left: 4.5px;
+    border: 3px solid #ffffff;
+    border-top: none;
+    border-right: none;
+
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    -o-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+#testbox input[type=radio]:checked + label:after {
+    opacity: 1;
+}
+
+#testbox hr{
+  color: #a9a9a9;
+  opacity: 0.3;
+}
+
+#testbox input[type=text], #testbox input[type=password]{
+  width: 200px; 
+  height: 39px; 
+  -webkit-border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
+  -moz-border-radius: 0px 4px 4px 0px/0px 0px 4px 4px; 
+  border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
+  background-color: #fff; 
+  -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+  -moz-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+  box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+  border: solid 1px #cbc9c9;
+  margin-left: -5px;
+  margin-top: 13px; 
+  padding-left: 10px;
+}
+
+<!--#testbox input[type=password]{-->
+<!--  margin-bottom: 25px;-->
+<!--}-->
+
+#icon {
+  display: inline-block;
+  width: 30px;
+  background-color: #507299;
+  padding: 8px 0px 8px 15px;
+  margin-left: 15px;
+  -webkit-border-radius: 4px 0px 0px 4px; 
+  -moz-border-radius: 4px 0px 0px 4px; 
+  border-radius: 4px 0px 0px 4px;
+  color: white;
+  -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.09);
+  -moz-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+  box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+  border: solid 0px #cbc9c9;
+}
+
+#testbox .gender {
+  margin-left: 30px;
+<!--  margin-bottom: 30px;-->
+}
+
+
+#testbox a.button {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    padding: 6px 25px 0px 20px;
+    margin: 10px 8px 20px 0px;
+    display: inline-block;
+    float: right;
+    text-decoration: none;
+    width: 50px;
+    height: 27px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    background-color: #507299;
+    -webkit-box-shadow: 0 3px rgb(41 64 90);
+    -moz-box-shadow: 0 3px rgba(58,87,175,.75);
+    box-shadow: 0 3px rgb(58 82 110);
+    transition: all 0.1s linear 0s;
+    top: 0px;
+    position: relative;
+}
+
+#testbox a.button:hover {
+  top: 3px;
+  background-color: #4d6b8f;
+  -webkit-box-shadow: none; 
+  -moz-box-shadow: none; 
+  box-shadow: none;
+  
+}
+
+input#FileBox {
+    display: none;
+}
+input#FileBox_reg {
+    display: none;
+}
+img#liveImg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    width: 283px;
+}
+div#InfoUser {
+    position: relative;
+    display: block;
+    top: 10px;
+    width: 480;
+    margin: 0 auto;
+    background: #405976;
+    border-radius: 6px;
+    box-shadow: 0 12px 13px rgb(0 0 0 / 16%), 0 12px 13px rgb(0 0 0 / 16%);
+    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+span#NameUser {
+    margin: 9px auto;
+    width: 300px;
+    display: block;
+    font-size: 18px;
+    float: left;
+}
+
+span#PasswordUser {
+    margin: 9px auto;
+    width: 300px;
+    display: block;
+    font-size: 18px;
+    float: left;
+}
+
+div#text_user_info {
+    width: 330px;
+    display: block;
+    margin: 0 auto;
+}
+
+h1#NameUser {
+    color: #ffffff;
+    text-align: center;
+}
+h1#PasswordUser {
+    color: #ffffff;
+    text-align: center;
+}
+
+div#UserImage {
+    display: block;
+    margin: 0px auto;
+    padding: 0px 0px 10px 0px;
+    width: 330px;
+}
+div#UserImage img {
+    margin: 5px;
+}
+</style>
