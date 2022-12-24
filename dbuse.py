@@ -174,8 +174,12 @@ if __name__ == "__main__":
     
     D.delete("face_id_table")
     D.createDB()
-    
-    os.remove("flat.index")
+
+    if os.path.exists("flat.index"):
+        os.remove("flat.index")
+        
+    if os.path.exists("flat2.index"):
+        os.remove("flat2.index")
 #    D.client.execute(f"""INSERT INTO "face_id_table" 
 #                        (ID, User, Password) 
 #                        VALUES (5, 'Victor', '123')""")    

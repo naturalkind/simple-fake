@@ -703,8 +703,7 @@ app = tornado.web.Application([
         (r"/", MainHandler),
         (r"/websocket", ImageWebSocket),
         (r"/faces/(.*)", tornado.web.StaticFileHandler, {'path':'./faces'}),
-        (r"/(B24CYBER-2-768x768.png)", tornado.web.StaticFileHandler, {'path':'./'}),
-        (r"/(b24cyber-cover-1.jpg)", tornado.web.StaticFileHandler, {'path':'./'}),
+        (r"/static_file/(.*)", tornado.web.StaticFileHandler, {'path':'./static_file'}),
     ])
 app.listen(8998)
 

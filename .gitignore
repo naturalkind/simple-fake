@@ -1,5 +1,8 @@
-old_version/
-vm.mp4
-my.mp4
+*.mp4
+*.mpeg4
+*.avi
+env/
+faces/
+*.pt
 
 

@@ -539,21 +539,21 @@ class DataBase():
 
 def deep_vector(x):
        t_arr = np.expand_dims(x, axis=0)
-       processed_img = preprocess(t_arr)
-       preds = model.predict(processed_img)
+       processed_img = preprocess_idx(t_arr)
+       preds = model_idx.predict(processed_img)
        return preds
 
 def similarity(vector1, vector2):
         return np.dot(vector1, vector2.T) / np.dot(np.linalg.norm(vector1, axis=1, keepdims=True),
                                                    np.linalg.norm(vector2.T, axis=0, keepdims=True))
                                                    
-model = tf.keras.applications.VGG16(include_top=False, 
+model_idx = tf.keras.applications.VGG16(include_top=False, 
                                     weights='imagenet', 
                                     input_tensor=None, 
                                     input_shape=None, 
                                     pooling='max')
                                     
-preprocess = tf.keras.applications.vgg16.preprocess_input
+preprocess_idx = tf.keras.applications.vgg16.preprocess_input
 
 #a_ = ord('а')
 #abc_ = ''.join([chr(i) for i in range(a_,a_+32)])
@@ -569,6 +569,12 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
         index = faiss.read_index("flat.index")
     except:
         index = faiss.IndexFlatL2(512)
+        
+        
+    try:
+        index2 = faiss.read_index("flat2.index")
+    except:
+        index2 = faiss.IndexFlatL2(512)
     # user data      -------------->
     D = DataBase()
     t_name = "face_id_table"
@@ -580,7 +586,7 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
     Z = np.zeros((len(abc_), 1))
     #----------------------->
     
-    #init("weights", "config.json", "cuda")
+    init("weights", "config.json", "cuda")
     def check_origin(self, origin):
         return True
 
@@ -598,13 +604,13 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
                     #if k["key_code"] < 104:
                     if str(k["key_name"]).lower() in abc_:
                         #print (k["key_code"], k["key_name"])
-                        self.Z[abc_.index(k["key_name"]),:] += k["time_press"]
+                        self.Z[abc_.index(k["key_name"].lower()),:] += k["time_press"]
         if list(ms.keys())[0] == "send_test":
             arr_img = np.zeros((224, 224, 3))
             arr_img[0:self.Z.shape[0], 0:self.Z.shape[1], 0] = self.Z
             vector = deep_vector(arr_img)
             self.Z = np.zeros((len(abc_), 1))
-            D, I = self.index.search(np.reshape(vector, [1, 512]), 3) 
+            D, I = self.index2.search(np.reshape(vector, [1, 512]), 3) 
             if D[0][0] < 0.6:
                 INFO = self.D.client.execute(f"""
                                                 SELECT *
@@ -633,8 +639,8 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
             self.D.client.execute(f"""INSERT INTO {self.t_name} 
                         (ID, User) 
                         VALUES ({_ID}, '{R_N}')""")
-            self.index.add(np.reshape(vector, [1, 512]))
-            faiss.write_index(self.index, "flat.index")
+            self.index2.add(np.reshape(vector, [1, 512]))
+            faiss.write_index(self.index2, "flat2.index")
             print ("SAVE_TEST", R_N, _ID)
         
         if list(ms.keys())[0] == "Start":
@@ -718,8 +724,7 @@ app = tornado.web.Application([
         (r"/", MainHandler),
         (r"/websocket", ImageWebSocket),
         (r"/faces/(.*)", tornado.web.StaticFileHandler, {'path':'./faces'}),
-        (r"/(B24CYBER-2-768x768.png)", tornado.web.StaticFileHandler, {'path':'./'}),
-        (r"/(b24cyber-cover-1.jpg)", tornado.web.StaticFileHandler, {'path':'./'}),
+        (r"/static_file/(.*)", tornado.web.StaticFileHandler, {'path':'./static_file'}),
     ])
 app.listen(8998)
 

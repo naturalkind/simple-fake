@@ -9,7 +9,7 @@
     <div class="testbox" id="testbox">
         <label id="icon" for="name" style="margin: 10px;" class="icon_back"><i class="icon-chevron-left"></i></label>
         <a href="https://b24cyber.com" target="_blank" id="logo24">
-           <img width="140" height="140" src="/B24CYBER-2-768x768.png">    
+           <img width="140" height="140" src="static_file/B24CYBER-2-768x768.png">    
         </a>    
         <div id="reg">
             <form action="/">
@@ -122,7 +122,16 @@ idk_block.innerHTML = `<p><b>Name:</b><br>
                        <input type="text" size="40" id="Name_ABC">
                        <h3>Enter this message:</h3>
                        <p>theory theory theory</p> 
-                       <div id="text_input" class="message_textarea" role="textbox" contenteditable="true" aria-multiline="true" aria-required="true" style="background: white;font-size: 26px;margin: 9px auto;"></div><button type="button" onclick="save_test(this)" indicator="save">SAVE</button><button type="button" onclick="send_test(this)" indicator="send">SEND</button>`
+                       <div id="text_input" class="message_textarea" role="textbox" contenteditable="true" aria-multiline="true" aria-required="true" style="background: white;font-size: 26px;margin: 9px auto;"></div>
+                       <button type="button" onclick="save_test(this)" 
+                                             indicator="save" 
+                                             class="Button" 
+                                             style="margin: 4px auto; display: block;">SAVE</button>
+                                             
+                       <button type="button" onclick="send_test(this)" 
+                                             indicator="send" 
+                                             class="Button"
+                                             style="margin: 4px auto; display: block;">SEND</button>`
 // Теория - это когда все известно, но ничего не работает                       
 // <button type="button" onclick="send_test()">SEND</button>                       
 document.getElementById("testbox").appendChild(idk_block);
@@ -156,7 +165,6 @@ function recording_key() {
     //keyTimes = {};
 }
 
-setInterval(recording_key, 1000);
 
 function save_test(self) {
     var NameABC = document.getElementById("Name_ABC").value;
@@ -183,6 +191,8 @@ idk_bt.addEventListener('click', function(e) {
     idk_bt.style.display = "none";
     // кнопка назад
     icon_back[0].style.display = "block"
+    
+    setInterval(recording_key, 1000);
 });
 
 
@@ -727,7 +737,7 @@ h2 {
 
 
 body {
-    background-image: url(/b24cyber-cover-1.jpg);
+    background-image: url(static_file/b24cyber-cover-1.jpg);
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
