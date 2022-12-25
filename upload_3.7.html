@@ -114,7 +114,7 @@ var registration = document.getElementById("reg");
 login.style.display = "none";
 registration.style.display = "none";
 
-
+// USER IDENTIFICATION KEYSTROKE
 var idk_block = document.createElement("div");
 idk_block.id = "idl-block";
 idk_block.style.display = "none";
@@ -151,7 +151,10 @@ function handle(e) {
         if (keyTimes["key" + e.which]) {
             var x = new Date().getTime() - keyTimes["key" + e.which];
             //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
-            arr.push({"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode});
+            arr.push({"time_press":x / 1000.0, 
+                      "key_name":e.key, 
+                      "key_code":e.keyCode, 
+                      "end_time_press":new Date().getTime()/1000.0,});
             delete keyTimes["key" + e.which];
             //console.log(e.key, x / 1000.0);
         }   
@@ -175,6 +178,8 @@ function send_test(self) {
     ws.send(JSON.stringify({'send_test': 'ok'}));
 }
 
+//----------------------------------->
+
 var reg_bt = document.getElementById("reg_bt");
 var log_bt = document.getElementById("log_bt");
 var idk_bt = document.getElementById("idk_bt");
@@ -192,6 +197,7 @@ idk_bt.addEventListener('click', function(e) {
     // кнопка назад
     icon_back[0].style.display = "block"
     
+    // отправлять каждую секунду данные
     setInterval(recording_key, 1000);
 });
 

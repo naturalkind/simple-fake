@@ -568,6 +568,13 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
         index = faiss.read_index("flat.index")
     except:
         index = faiss.IndexFlatL2(512)
+        
+        
+    try:
+        index2 = faiss.read_index("flat2.index")
+    except:
+        index2 = faiss.IndexFlatL2(512)
+        
     # user data      -------------->
     D = DataBase()
     t_name = "face_id_table"
@@ -577,8 +584,6 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
     
     #----------------------->
     arr = []
-    arr_img1 = np.zeros((224, 224, 3))
-    arr_img2 = np.zeros((224, 224, 3))
     #----------------------->
     
     #init("weights", "config.json", "cuda")
@@ -593,34 +598,57 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
         # 104 клавиш клавиатуры
         if list(ms.keys())[0] == "KEYPRESS":
             if len(ms["KEYPRESS"]) != 0:
-                print ("MSG >>>", ms["KEYPRESS"], len(ms["KEYPRESS"]), type(ms["KEYPRESS"]))
                 Z = np.zeros((len(abc_), 1))
                 for k in ms["KEYPRESS"]:
-                    #if k["key_code"] < 104:
                     if str(k["key_name"]).lower() in abc_:
-                        print (k["key_code"], k["key_name"])
+                        #print (k["key_code"], k["key_name"])
                         Z[abc_.index(k["key_name"]),:] = k["time_press"]
                 self.arr.append(Z)
 #                print (Z.shape, np.concatenate(self.arr, axis=1).shape)
         if list(ms.keys())[0] == "send_test":
             H = np.concatenate(self.arr, axis=1)
-            self.arr_img2[0:H.shape[0],0:H.shape[1], 0] = H
-            vector_1 = deep_vector(self.arr_img1)
-            vector_2 = deep_vector(self.arr_img2)
-            KEF = similarity(vector_1, vector_2)  
-            self.arr_img1 = np.zeros((224, 224, 3))
-            self.arr_img2 = np.zeros((224, 224, 3))
+            arr_img = np.zeros((224, 224, 3))
+            arr_img[0:H.shape[0],0:H.shape[1], 0] = H
+            vector = deep_vector(arr_img)
             self.arr = []
-            print ("SEND_TEST", KEF[0][0], self.arr, vector_1.shape, vector_2.shape)
+            
+            D, I = self.index2.search(np.reshape(vector, [1, 512]), 3) 
+            if D[0][0] < 0.6:
+                INFO = self.D.client.execute(f"""
+                                                SELECT *
+                                                FROM {self.t_name}
+                                                WHERE {self.t_name}.ID = {I[0][0]} 
+                                              """) 
+                INFO = INFO[0][1]
+            else:
+                INFO = "Error"  
+            """
+            на шаге 0
+            
+            
+            """                      
+            print ("SEND_TEST", D, I, INFO)
             self.write_message(json.dumps({"switch":"SendTest", 
-                                           "NameABC":"", 
-                                           "coefficiens": float(KEF[0][0])}))
+                                           "NameABC":INFO, 
+                                           "coefficiens": float(D[0][0])}))
             
         if list(ms.keys())[0] == "save_test":
             H = np.concatenate(self.arr, axis=1)
-            self.arr_img1[:H.shape[0], :H.shape[1], 0] = H
+            arr_img = np.zeros((224, 224, 3))
+            arr_img[:H.shape[0], :H.shape[1], 0] = H
             self.arr = []
-            print ("SAVE_TEST", H.shape, self.arr_img1.shape, self.arr, ms["NameABC"])
+            
+            vector = deep_vector(arr_img)
+            # clickhouse
+            _ID = int(self.D.show_count_tables(self.t_name)[0][0])
+            R_N = ms['NameABC']
+            self.D.client.execute(f"""INSERT INTO {self.t_name} 
+                        (ID, User) 
+                        VALUES ({_ID}, '{R_N}')""")
+            self.index2.add(np.reshape(vector, [1, 512]))
+            faiss.write_index(self.index2, "flat2.index")
+            print ("SAVE_TEST", R_N, _ID)            
+        
         
         if list(ms.keys())[0] == "Start":
             self.namefile = f'videos/{ms["Start"]["Name"]}'

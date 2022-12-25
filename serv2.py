@@ -558,7 +558,7 @@ preprocess_idx = tf.keras.applications.vgg16.preprocess_input
 #a_ = ord('а')
 #abc_ = ''.join([chr(i) for i in range(a_,a_+32)])
 import string
-abc_ = string.ascii_lowercase
+abc_ = string.ascii_lowercase + " "
 class ImageWebSocket(tornado.websocket.WebSocketHandler):
     clients = set()
     myfile = 0
@@ -584,6 +584,7 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
     
     #----------------------->
     Z = np.zeros((len(abc_), 1))
+    Z_pad = np.zeros((len(abc_), 1))
     #----------------------->
     
     init("weights", "config.json", "cuda")
@@ -598,16 +599,20 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
         # 104 клавиш клавиатуры
         if list(ms.keys())[0] == "KEYPRESS":
             if len(ms["KEYPRESS"]) != 0:
-                #print ("MSG >>>", ms["KEYPRESS"], len(ms["KEYPRESS"]), type(ms["KEYPRESS"]))
-                
-                for k in ms["KEYPRESS"]:
-                    #if k["key_code"] < 104:
+                self.Z_pad = np.zeros((1, len(ms["KEYPRESS"])))
+                for ix, k in enumerate(ms["KEYPRESS"]):
                     if str(k["key_name"]).lower() in abc_:
-                        #print (k["key_code"], k["key_name"])
                         self.Z[abc_.index(k["key_name"].lower()),:] += k["time_press"]
+                        N = k["end_time_press"] - ms["KEYPRESS"][ix-1]["end_time_press"]
+                        if N > float(0):
+                            self.Z_pad[0, ix] = N
+                print ("----------------------------------", len(ms["KEYPRESS"]), self.Z_pad.shape)
         if list(ms.keys())[0] == "send_test":
             arr_img = np.zeros((224, 224, 3))
             arr_img[0:self.Z.shape[0], 0:self.Z.shape[1], 0] = self.Z
+            
+            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
+            
             vector = deep_vector(arr_img)
             self.Z = np.zeros((len(abc_), 1))
             D, I = self.index2.search(np.reshape(vector, [1, 512]), 3) 
@@ -625,11 +630,40 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
             self.write_message(json.dumps({"switch":"SendTest", 
                                            "NameABC":INFO, 
                                            "coefficiens": float(D[0][0])}))
-            
+        
+#        if list(ms.keys())[0] == "error_reg":
+            #1 p(n) = p(0)×P n
+#           index.add_with_ids(vectors, ids)  
+
+        """
+        шаг == секунда
+        стохастический вектор - p(n)
+        36 - буквы, пробел, точка, запятая
+        36 - мы допускаем что за одну секунду не возможно нажать больше 36 символов
+        
+        для одного человека
+        цикл:
+            если поступившие данные имеют в себе отслеживаемые символы:
+                на первом шаге:
+                    создаем вектор [36,36] из полученного
+                    сохраняем в DB
+                все остальные шаги:
+                    из базы данных получаем данные с предыдущего шага - P
+                    вычислить стохастический вектор p(n) = p(0)×Pn ???
+                    вычислить медиану/среднее
+                    
+                    мы получим числовые коэффициент отображающий вероятность 
+                    что поступившие данные похожи с данными из предыдущего шага?
+
+        """
+
         if list(ms.keys())[0] == "save_test":
             
             arr_img = np.zeros((224, 224, 3))
             arr_img[:self.Z.shape[0], :self.Z.shape[1], 0] = self.Z
+            
+            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
+            
             vector = deep_vector(arr_img)
             
             self.Z = np.zeros((len(abc_), 1))
