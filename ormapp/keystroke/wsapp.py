@@ -1,13 +1,7 @@
-import json
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from keystroke.models import *
-from importlib import import_module
 
-from django.conf import settings
-from django.utils import dateformat
-from asgiref.sync import sync_to_async
-from channels.db import database_sync_to_async
-
+import json
 import datetime
 import asyncio
 import aioredis
@@ -19,7 +13,7 @@ import uuid
 import base64, io, os
 
 
-class wsHandler(AsyncJsonWebsocketConsumer):
+class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_name = "wall"
         self.sender_id = self.scope['user'].id
@@ -70,6 +64,7 @@ class wsHandler(AsyncJsonWebsocketConsumer):
         """
         
         response = json.loads(text_data)
+        print (response, self.scope['user'])
         event = response.get("event", None)
         if self.scope['user'].is_authenticated:  
             # KEYSTROKE

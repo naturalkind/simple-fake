@@ -67,6 +67,7 @@ function save_test(self) {
     text_input.innerText = "";
 } 
 function send_test(self) {
+    console.log("SEND_TEST");
     ws.send(JSON.stringify({'send_test': 'ok'}));
 }
 
@@ -96,9 +97,10 @@ idk_bt.addEventListener('click', function(e) {
     //setInterval(recording_key, 1000);
 });
 
-//
+// регистрация 
 reg_bt.addEventListener('click', function(e) {
     //registration.style.display = "block";
+    registration()
     reg_bt.style.display = "none";
     log_bt.style.display = "none";
     idk_bt.style.display = "none";
@@ -117,23 +119,30 @@ log_bt.addEventListener('click', function(e) {
 // кнопка назад     
 icon_back[0].addEventListener('click', function(e) {
     // кнопка назад 
-    icon_back[0].style.display = "none"
-    // кнопки
-    reg_bt.style.display = "block";
-    log_bt.style.display = "block";
-    idk_bt.style.display = "block";
-    
-    //registration.style.display = "none";
-    idk_block.style.display = "none";
-    
-    document.getElementsByClassName("testbox")[0].style.width = "343px";
-    document.getElementById("logo24").style.display = "block";    
+    location.reload();
 });    
 
 
+function registration() {
+    var crsv = getCookie('csrftoken'); // токен
+    var http = createRequestObject();
+    var linkfull = '/registration/';
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                document.getElementById("main").innerHTML = http.responseText;
+            }
+        }
+        http.send(null);  
+    } 
+}
+
 //---------------------------------->
 
-var ws = new WebSocket("ws://178.158.131.41:8998/"); // IP
+var ws = new WebSocket("ws://178.158.131.41:8998/wall/"); // IP
 
 //---------------------------------->
 //function Register() {
@@ -175,28 +184,29 @@ function getCookie(name) {
 }
 
 function Register() {
-    var crsv = getCookie('csrftoken'); // токен
-    console.log(crsv);
-    var http = createRequestObject();
-    var linkfull = '/registration/';
-    if (http) {
-        http.open('post', linkfull);
-        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-        http.setRequestHeader('X-CSRFToken', crsv);
-        http.onreadystatechange = function () {
-            if (http.readyState == 4) {
-//                alert("отправлено");
-//                console.log(http.responseText);
-            }
-        }
-        if (document.getElementById('name_name').value != "" && document.getElementById('name_pass').value != "") {
-            http.send(JSON.stringify({ 'Name' : document.getElementById('name_name').value,
-                                       'Pass' : document.getElementById('name_pass').value}));         
-        } else {
-            alert("заполните поля")
-        }
-  
-    } 
+    document.getElementById("FormReg").submit();
+//    var crsv = getCookie('csrftoken'); // токен
+//    console.log(crsv);
+//    var http = createRequestObject();
+//    var linkfull = '/registration/';
+//    if (http) {
+//        http.open('post', linkfull);
+//        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+//        http.setRequestHeader('X-CSRFToken', crsv);
+//        http.onreadystatechange = function () {
+//            if (http.readyState == 4) {
+////                alert("отправлено");
+////                console.log(http.responseText);
+//            }
+//        }
+//        if (document.getElementById('name_name').value != "" && document.getElementById('name_pass').value != "") {
+//            http.send(JSON.stringify({ 'Name' : document.getElementById('name_name').value,
+//                                       'Pass' : document.getElementById('name_pass').value}));         
+//        } else {
+//            alert("заполните поля")
+//        }
+//  
+//    } 
 }
 
 

@@ -73,6 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ormapp.wsgi.application'
+
 ASGI_APPLICATION = 'ormapp.asgi.application'
 
 CHANNEL_LAYERS = {

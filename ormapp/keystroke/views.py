@@ -15,13 +15,15 @@ import json
 #def mainpage(request):
 #    if request.method == 'GET':
 #        return render(request, 'index.html')
+from django.contrib.auth.decorators import login_required
+
 
 class UserForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username',)
 
-        
+@login_required       
 def mainpage(request):
     args = {}
     args['username'] = auth.get_user(request)
@@ -40,9 +42,10 @@ def registration(request):
     args.update(csrf(request))
     args['username'] = auth.get_user(request)
     args['form'] = UserForm()
+    print (request, request.POST, request.method)
     if request.POST:
-        
-        newuser_form = UserForm(request.POST, request.FILES)
+        newuser_form = UserForm(request.POST)
+        print (newuser_form.is_valid())
         error_str = f"<html><body>{newuser_form.errors}</body></html>"
         if newuser_form.is_valid():
             path = str(uuid.uuid4())[:12]
