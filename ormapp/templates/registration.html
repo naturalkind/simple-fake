@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block reg %}
+    <div id="reg">
+        <form action="/">
+            <hr>
+            <div id="start_step_reg">
+                <label id="icon" for="name"><i class="icon-user"></i></label>
+                <input type="text" name="name" id="name_name" placeholder="Name" required/>
+
+                <label id="icon" for="name"><i class="icon-shield"></i></label>
+                <input type="password" name="name" id="name_pass" placeholder="Password" required/>
+            </div>
+            <span id='UploadArea_reg'></span>
+            <hr>  
+            <p id="InfoReg">By clicking Register, you agree on our <a href="#">terms and condition</a>.</p>
+            <a href="#" class="button" id="Confirm" onclick="Register()">Confirm</a>
+       </form>
+    </div>
+{% endblock reg %}

@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600' rel='stylesheet' type='text/css'>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" media="all" href="/media/css/main.css">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>Deepfake Detector</title>
+    </head>
+    <div class="testbox" id="testbox">
+    <div id="user_info">User: {{ username }}</div>    
+    <label id="icon" for="name" style="margin: 10px;" class="icon_back"><i class="icon-chevron-left"></i></label>
+    <a href="https://b24cyber.com" target="_blank" id="logo24">
+       <img width="140" height="140" src="/media/images/B24CYBER-2-768x768.png">    
+    </a>   
+    <div id="main">
+        {% block content %}{% endblock %}
+        {% block reg %}{% endblock %}
+        {% block keystroke %}{% endblock %}
+    </div>
+<!--<div id="loader"></div>-->
+<script type="text/javascript" src="/media/js/main.js"></script>
+</html>
