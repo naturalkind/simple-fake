@@ -1,5 +1,7 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from keystroke.models import *
+from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 
 import json
 import datetime
@@ -11,6 +13,38 @@ import redis
 import time
 import uuid
 import base64, io, os
+
+# clickhouse
+from clickhouse_driver import Client as ClientClickhouse
+class DataBase():
+    def __init__(self):
+        self.client = ClientClickhouse('localhost', settings = { 'use_numpy' : True })
+ 
+    def createDB(self, x="test_table"):
+    
+        self.client.execute(f"""CREATE TABLE {x} 
+                                (ID Int64,
+                                 User String) 
+                            ENGINE = MergeTree() ORDER BY User""")
+    def delete(self, x):
+        self.client.execute(f'DROP TABLE IF EXISTS {x}')    
+    def show_count_tables(self, x):
+        start = time.time()
+        LS = self.client.execute(f"SELECT count() FROM {x}")
+        print (time.time()-start, LS)
+        return LS
+    def show_tables(self):
+        print (self.client.execute('SHOW TABLES'))        
+    def get_all_data(self, x):
+        start = time.time()
+        LS = self.client.execute(f"SELECT * FROM {x}")
+        print (time.time()-start, len(LS)) 
+        return LS
+        
+clickhouse_table_name = "keypress_id_table"   
+clickhouse_db = DataBase()
+clickhouse_db.delete(clickhouse_table_name)
+clickhouse_db.createDB(clickhouse_table_name)
 
 
 class B_Handler(AsyncJsonWebsocketConsumer):
@@ -64,13 +98,32 @@ class B_Handler(AsyncJsonWebsocketConsumer):
         """
         
         response = json.loads(text_data)
-        print (response, self.scope['user'])
+        #print (response, self.scope['user'])
         event = response.get("event", None)
         if self.scope['user'].is_authenticated:  
             # KEYSTROKE
             if event == "KEYPRESS":
                 print (event)
                 pass
+            if event == "send_test":
+                """
+                сохраняю с помощью orm django
+                сохраняю данные в clickhouse
+                из clickhouse делаю загрузку данных
+                для дальнейшего анализа
+                """
+                _ID = int(clickhouse_db.show_count_tables(clickhouse_table_name)[0][0])
+                post = Post()
+                post.pure_data = response["KEYPRESS"]
+                post.text = response["text"]
+                post.user_post = self.sender_name
+                post_async = sync_to_async(post.save)
+                await post_async()    
+#                now = datetime.datetime.now().strftime('%H:%M:%S')
+ 
+                
+                
+                print (response, self.scope['user'], _ID, post.id)
         
 
     async def wallpost(self, res):

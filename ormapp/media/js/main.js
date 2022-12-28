@@ -10,7 +10,8 @@ idk_block.style.display = "none";
 idk_block.innerHTML = `
                        <h3>Enter this message:</h3>
                        <br>
-                       <p style="font-size:20px;">повторим этот эксперимент несколько раз с одним и тем же оператором и посмотрим, 
+                       <p style="font-size:20px;">
+                          повторим этот эксперимент несколько раз с одним и тем же оператором и посмотрим, 
                           как будет изменяться статистика на этом коротком тесте. обязательно фиксируем условия, в
                           которых работает оператор. желательно, чтобы сначала работал в одних и тех же условиях.
                           повторим этот эксперимент несколько раз с одним и тем же оператором и посмотрим, как будет
@@ -18,38 +19,98 @@ idk_block.innerHTML = `
                           работает оператор. желательно, чтобы сначала работал в одних и тех же условиях.
                           повторим этот эксперимент несколько раз с одним и тем же оператором и посмотрим, как будет
                           изменяться статистика на этом коротком тесте. обязательно фиксируем условия, в которых
-                          работает оператор. желательно, чтобы сначала работал в одних и тех же условиях.</p> 
+                          работает оператор. желательно, чтобы сначала работал в одних и тех же условиях.
+                       </p>
+                       <br>
+                       <div id="show_value"></div>
+                       <br> 
                        <div id="text_input" class="message_textarea" role="textbox" contenteditable="true" aria-multiline="true" aria-required="true" style="background: white;font-size: 26px;margin: 9px auto;"></div>
                        <button type="button" onclick="send_test(this)" 
                                              indicator="send" 
                                              class="Button"
                                              style="margin: 4px auto; display: block;">SEND</button>`
 // Теория - это когда все известно, но ничего не работает                       
-// <button type="button" onclick="send_test()">SEND</button>                       
+// <button type="button" onclick="send_test()">SEND</button>    
+/*
+You can use the indexOf method like this:
+var index = array.indexOf(item);
+if (index !== -1) {
+  array.splice(index, 1);
+}
+
+Note: You'll need to shim it for IE8 and below
+var array = [1,2,3,4]
+var item = 3
+var index = array.indexOf(item);
+array.splice(index, 1);
+console.log(array)
+
+*/
+
+                   
 document.getElementById("testbox").appendChild(idk_block);
 
 var text_input = document.getElementById("text_input");
 
 var keyTimes = {};
 var arr = [];
+var idx_arr = 0;
 text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = handle;
 function handle(e) {
     //console.log("WALL KEYPRESS", e, e.type, keyTimes);
     if (e.type == "keydown") {
+        //console.log("KEYDOWN");
+        //idx_arr++;
         if (!keyTimes["key" + e.which]) {
             keyTimes["key" + e.which] = new Date().getTime();
         }    
     } else if (e.type == "keyup") {
         if (keyTimes["key" + e.which]) {
-            var x = new Date().getTime() - keyTimes["key" + e.which];
-            //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
-            arr.push({"time_press":x / 1000.0, 
-                      "key_name":e.key, 
-                      "key_code":e.keyCode, 
-                      "end_time_press":new Date().getTime()/1000.0,});
-            delete keyTimes["key" + e.which];
-            //console.log(e.key, x / 1000.0);
-        }   
+            if (e.key=="ArrowLeft") {
+                idx_arr--;
+                console.log("ArrowLeft................",arr[idx_arr]);
+            } else if (e.key=="ArrowRight") { 
+                idx_arr++;
+                console.log("ArrowRight................",arr[idx_arr]);            
+            
+            } else if (e.key=="Backspace") { 
+                console.log(arr.length);
+                idx_arr--;
+                arr.splice(idx_arr, 1);
+                console.log("Backspace................",idx_arr, arr[idx_arr], arr.length);    
+                //-------------------------->
+                var value_pure = '';
+                for (var i = 0; i < arr.length; i++) {
+                    value_pure += arr[i].key_name;
+                }
+                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`
+                //-------------------------->     
+            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control") {
+                                   
+            } else {
+                var x = new Date().getTime() - keyTimes["key" + e.which];
+                //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
+                var _data = {"time_press":x / 1000.0, 
+                             "key_name":e.key, 
+                             "key_code":e.keyCode, 
+                             "end_time_press":new Date().getTime()/1000.0}
+                //arr.push(_data);
+                arr.splice(idx_arr, 1, _data);
+                delete keyTimes["key" + e.which];
+                console.log(e.key, x / 1000.0, idx_arr);
+                
+                var value_pure = '';
+                var value_time = '';
+                for (var i = 0; i < arr.length; i++) {
+                    value_pure += arr[i].key_name;
+                    value_time += arr[i].time_press;
+                }
+                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
+                                      `; //<div class="value_time">${value_time}</div>
+                                      
+                idx_arr += 1;
+            }
+        } 
     }
 }
 function recording_key() {
@@ -60,15 +121,19 @@ function recording_key() {
     //keyTimes = {};
 }
 
-
-function save_test(self) {
-    var NameABC = document.getElementById("Name_ABC").value;
-    ws.send(JSON.stringify({'save_test': 'ok', 'NameABC':NameABC}));
-    text_input.innerText = "";
-} 
 function send_test(self) {
     console.log("SEND_TEST");
-    ws.send(JSON.stringify({'send_test': 'ok'}));
+    var value_pure = '';
+    for (var i = 0; i < arr.length; i++) {
+        value_pure += arr[i].key_name;
+    }    
+    
+    ws.send(JSON.stringify({'event': 'send_test', 
+                            'KEYPRESS': arr,
+                            'text':value_pure}));
+    text_input.innerText = "";
+    arr.length = 0;
+    show_value.innerHTML = "";
 }
 
 //----------------------------------->

@@ -28,6 +28,7 @@ class User(AbstractUser):
 
 class Post(models.Model):
     text = models.TextField(max_length=999999, default="", verbose_name='Текст', blank=True)
+    pure_data = models.TextField(max_length=999999, default="", verbose_name='Данные', blank=True)
     date_post = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     user_post = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='us_post', default="", on_delete=models.CASCADE)
 
