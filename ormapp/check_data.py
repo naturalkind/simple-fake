@@ -12,7 +12,8 @@ import uuid
 import json
 import numpy as np
 import pandas as pd
-
+from scipy.stats import norm
+import matplotlib.pyplot as plt
 # обработка нажатий
 
 alf_ = ord('а')
@@ -133,7 +134,6 @@ def cratealldata():
             all_user_m.append(result)
         
         print (len(posts), len(list_post_m), char_l)
-            
 #            all_user_m.append(m_post_user)
             #print (m_post_user)
             #print (u, len(list_post_m), np.array(list_post_m).shape, m_post_user.shape)
@@ -143,16 +143,31 @@ def cratealldata():
     dataset = pd.DataFrame(data=AAA[0:,0:], index=[i for i in range(AAA.shape[0])], columns=combination)
     dataset = sort_col(dataset)
     dataset[combination] = dataset[combination].replace(['0', 0], np.nan)
-    dataset.to_csv(f'_count.csv')
-    print(dataset)
+    #dataset.to_csv(f'_count.csv')
     
+    #---------------------->
+    # тестирование 
+    #plt.plot(dataset, norm.pdf(dataset, dataset[combination].mean(), dataset[combination].std()))
+    data_ = norm.pdf(dataset, dataset[combination].mean(), dataset[combination].std())
     
+    fig, axs = plt.subplots(1, 2)
+    n_bins = len(combination)
+    axs[0].hist(data_[0, :], bins=n_bins)
+    axs[0].set_title('User 1')
+    axs[1].hist(data_[1, :], bins=n_bins)
+    axs[1].set_title('User 2')
+    plt.show()    
+    
+    #Sigma = np.cov(filte_Z,previous_Z.reshape(1, len(abc_)*len(abc_)))[0,1]
+    #dataset[combination].mean(), dataset[combination].std(), norm.pdf(dataset, dataset[combination].mean()
+    
+    #-------------------------->
     AAA1 = np.array(all_user_c)[:,:,0]
     dataset1 = pd.DataFrame(data=AAA1[0:,0:], index=[i for i in range(AAA1.shape[0])], columns=combination )
     dataset1 = sort_col(dataset1)
     dataset1[combination] = dataset1[combination].replace(['0', 0], np.nan)
-    dataset.to_csv(f"_median.csv")
-    print (dataset1)    
+    #dataset.to_csv(f"_median.csv")
+    #print (dataset1)    
     
 cratealldata()
 
