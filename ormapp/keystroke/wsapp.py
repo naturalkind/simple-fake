@@ -69,7 +69,7 @@ def indices(lst, element):
 
 class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        self.room_name = "wall"
+        self.room_name = "main"
         self.sender_id = self.scope['user'].id
         self.room_group_name = self.room_name
         self.sender_name = self.scope['user']
@@ -95,7 +95,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
 #        self.Z_pad = np.zeros((len(abc_), 1))
         #----------------------->
             
-        print ("CHANNEL_LAYERS", self.channel_name, self.room_group_name, self.scope['user'])
+        print ("CHANNEL_LAYERS", self.channel_name, self.room_group_name, self.scope['user']) #self.scope, 
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name

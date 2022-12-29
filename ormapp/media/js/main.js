@@ -271,7 +271,7 @@ function crate_data_all(self) {
 
 //---------------------------------->
 
-var ws = new WebSocket("ws://178.158.131.41:8998/wall/"); // IP
+var ws = new WebSocket("ws://178.158.131.41:8998/wspage/"); // IP
 
 //---------------------------------->
 //function Register() {
