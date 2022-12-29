@@ -248,7 +248,7 @@ animation: spin 2s linear infinite;
 
 
 #testbox body, #testbox div, #testbox dl, #testbox dt, #testbox dd, #testbox ul, #testbox ol, #testbox li, #testbox h1, #testbox h2, #testbox h3, #testbox h4, #testbox h5, #testbox h6, 
-#testbox pre, #testbox form, #testbox fieldset, #testbox input, #testbox textarea, #testbox p, #testbox blockquote, #testbox th, #testbox td { 
+#testbox pre, #testbox form, #testbox fieldset, #testbox input, #testbox textarea, #testbox p, #testbox blockquote{ 
   padding:0;
   margin:0;}
 
@@ -400,7 +400,39 @@ animation: spin 2s linear infinite;
   margin-left: 30px;
 <!--  margin-bottom: 30px;-->
 }
+#blockup #node {
+    background: #FFFFFF;
+    max-width: 800px;
+    margin: 0 auto;
+}
 
+#testbox table,
+#testbox th, #testbox td {
+    padding: 5px;
+    border: 1px solid #333;
+}
+
+thead,
+tfoot {
+    background-color: #333;
+    color: #fff;
+}
+
+
+#blockup {
+    display: block;
+    background: rgba(0, 0, 0, 0.75);
+    overflow: auto;
+    border: 0 none;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    overflow-y: scroll;
+    position: fixed;
+    right: 0;
+    top: 0;
+    text-align: center;
+}
 
 #testbox a.button {
     font-size: 14px;

@@ -7,7 +7,10 @@ idk_block.id = "idl-block";
 idk_block.style.display = "none";
 //<p><b>name: ${document.getElementById("user_info").innerText}</b><br>
 //<br>
-idk_block.innerHTML = `
+idk_block.innerHTML = `<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
+                       <button type="button" id="see_posts"  onclick="crate_data_all(this)">CRATE DATA ALL</button>
+                       <div id="block_post"></div>
+                       <br>
                        <h3>Enter this message:</h3>
                        <br>
                        <p style="font-size:20px;">
@@ -85,15 +88,17 @@ function handle(e) {
                 }
                 show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`
                 //-------------------------->     
-            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control") {
+            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift") {
                                    
             } else {
-                var x = new Date().getTime() - keyTimes["key" + e.which];
+                var time_up = new Date().getTime()
+                var x = time_up - keyTimes["key" + e.which];
                 //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
-                var _data = {"time_press":x / 1000.0, 
+                var _data = {"time_keydown": keyTimes["key" + e.which] / 1000.0,
+                             "time_press":x / 1000.0, 
                              "key_name":e.key, 
                              "key_code":e.keyCode, 
-                             "end_time_press":new Date().getTime()/1000.0}
+                             "time_keyup":time_up/1000.0}
                 //arr.push(_data);
                 arr.splice(idx_arr, 1, _data);
                 delete keyTimes["key" + e.which];
@@ -134,6 +139,7 @@ function send_test(self) {
     text_input.innerText = "";
     arr.length = 0;
     show_value.innerHTML = "";
+    keyTimes = {}
 }
 
 //----------------------------------->
@@ -180,6 +186,22 @@ log_bt.addEventListener('click', function(e) {
     idk_bt.style.display = "none";
     // кнопка назад    
     icon_back[0].style.display = "block"
+    var crsv = getCookie('csrftoken'); // токен
+    var http = createRequestObject();
+    var linkfull = '/login/';
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                main.innerHTML = http.responseText;
+            }
+        }
+        http.send(null);  
+    }    
+    
+    
 });   
 // кнопка назад     
 icon_back[0].addEventListener('click', function(e) {
@@ -203,6 +225,48 @@ function registration() {
         }
         http.send(null);  
     } 
+}
+
+//---------------------------------->
+// все данные
+function see_posts(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    var http = createRequestObject();
+    var linkfull = '/alldata/';
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                document.getElementById("block_post").innerHTML = http.responseText;
+            }
+        }
+        http.send(null);  
+    } 
+
+}
+
+// подготовка всех данных
+function crate_data_all(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    var http = createRequestObject();
+    var linkfull = '/cratealldata/';
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                //console.log(http.responseText);
+                var data = JSON.parse(http.responseText);
+//                window.open(data["answer"], '_blank');
+                window.open(data["answer_count"], '_blank');
+            }
+        }
+        http.send(null);  
+    }
+
 }
 
 //---------------------------------->
@@ -274,7 +338,39 @@ function Register() {
 //    } 
 }
 
+function close_div() {
+    document.body.style.overflow = 'auto';
+    idk_block.style.display = "block";
+    blockup.style.display = "none";
+}
 
+blockup.style.display = "none";
+function see_data(self) {
+    var id_p = self.getAttribute("post_id");
+    var crsv = getCookie('csrftoken'); // токен
+    var http = createRequestObject();
+    var linkfull = '/data/'+ id_p;
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                blockup.innerHTML = `<div id="node">
+                                        <br>
+                                        ${http.responseText}
+                                        <br>
+                                        <button onclick="close_div()">закрыть</button>
+                                    </div>`
+                //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+                blockup.style.display = "block";
+                document.body.style.overflow = 'hidden';
+                idk_block.style.display = "none";
+            }
+        }
+        http.send(null);  
+    }     
+}
 
                 
                 
@@ -287,10 +383,15 @@ ws.onopen = function() {
 
 ws.onmessage = function(data) {
     var message_data = JSON.parse(data.data);
-    console.log(message_data)
-    if (message_data["switch"] == "SendTest") {
-    } else if (message_data["switch"] == "MoreData") {
-    } else if (message_data["switch"]=="Done") { 
+    if (message_data["status"] == "send_test") {
+        console.log(message_data, block_post);
+        block_post.innerHTML += `<button type="button" onclick="see_data(this)" 
+                                         indicator="send" class="Button" 
+                                         style="margin: 4px auto; display: block;" post_id="${message_data["post_id"]}">
+                                         Посмотреть статисику поста #${message_data["post_id"]}, 
+                                         пользователя ${message_data["user_post"]}</button>`
+    } else if (message_data["status"] == "MoreData") {
+    } else if (message_data["status"]=="Done") { 
     }
         
 };

@@ -1,19 +1,19 @@
-{% extends 'base.html' %}
 {% block content %}
 <div id="log">
-    <form action="/">
+    <form action="/login/" method="POST" enctype="multipart/form-data" id="FormReg">
+        {% csrf_token %}
         <hr>
-        <h2>Enter</h2>
+        <h3>CHANGE USER</h2>
         <span id='UploadArea'>
             <div id="name_pwd">    
                 <label id="icon" for="name"><i class="icon-user"></i></label>
-                <input type="text" name="name" id="name_name" placeholder="Name" required/>
+                <input type="text" name="username" id="name_name" placeholder="Name" required/>
 
                 <label id="icon" for="name"><i class="icon-shield"></i></label>
-                <input type="password" name="name" id="name_pass" placeholder="Password" required/>
+                <input type="password" name="password" id="name_pass" placeholder="Password" required/>
             </div>
             <br>
-            <button    type='button' id='UploadButton' class='Button'>scan</button>
+            <button type='submit' form="FormReg"  id='UploadButton' class='Button'>ENTER</button>
         </span>
         <hr>
     </form>    

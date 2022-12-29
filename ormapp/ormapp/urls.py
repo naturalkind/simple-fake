@@ -27,5 +27,7 @@ urlpatterns = [
     path(r'login/', keystroke.login),
     path(r'keystroke/', keystroke.keystroke),
     re_path(r'^data/(?P<post>\d+)/$', keystroke.post), # страница материала
+    path(r'alldata/', keystroke.alldata),
+    path(r'cratealldata/', keystroke.cratealldata),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

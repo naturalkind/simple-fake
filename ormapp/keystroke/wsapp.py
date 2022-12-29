@@ -13,6 +13,7 @@ import redis
 import time
 import uuid
 import base64, io, os
+import numpy as np
 
 # clickhouse
 from clickhouse_driver import Client as ClientClickhouse
@@ -46,6 +47,25 @@ clickhouse_db = DataBase()
 clickhouse_db.delete(clickhouse_table_name)
 clickhouse_db.createDB(clickhouse_table_name)
 
+combination = ["ст", "то", "но", "на", "по", "ен", "ни", "не", "ко", "ра", "ов", "ро", "го", "ал",
+               "пр", "ли", "ре", "ос", "во", "ка", "ер", "от", "ол", "ор", "та", "ва", "ел", "ть",
+               "ет", "ом", "те", "ло", "од", "ла", "ан", "ле", "ве", "де", "ри", "ес", "ат", "ог",
+               "ль", "он", "ны", "за", "ти", "ит", "ск", "ил", "да", "ой", "ем", "ак", "ме", "ас",
+               "ин", "об", "до", "че", "мо", "ся", "ки", "ми", "се", "тр", "же", "ам", "со", "аз",
+               "нн", "ед", "ис", "ав", "им", "ви", "тв", "ар", "бы", "ма", "ие", "ру", "ег", "бо",
+               "сл", "из", "ди", "чт", "вы", "вс", "ей", "ия", "пе", "ик", "ив", "сь", "ое", "их",
+               "ча", "ну", "мы"] # 101   
+
+
+def indices(lst, element):
+    result = []
+    offset = -1
+    while True:
+        try:
+            offset = lst.index(element, offset+1)
+        except ValueError:
+            return result
+        result.append(offset)
 
 class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -120,11 +140,37 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                 post_async = sync_to_async(post.save)
                 await post_async()    
 #                now = datetime.datetime.now().strftime('%H:%M:%S')
- 
+                #---------------------------------------->
+                T = response["text"]
+                div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"       
+                np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
+                for ih, h in enumerate(combination):
+                    idx = indices(T, h)
+                    if idx != []:
+                        print (f"INDICES -> {h} <-------------------", idx)
+                        temp_ls = []
+                        for k in idx:
+                            temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
+                        np_zeros[ih, 0] = np.median(np.array(temp_ls))
+                        np_zeros[ih, 1] = T.count(h)
+                        div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
+                        print ("MDEIANA", np.median(np.array(temp_ls)))
+                div_temp += "</tbody></table>"                
                 
-                
+                #---------------------------------------->
                 print (response, self.scope['user'], _ID, post.id)
-        
+                now = datetime.datetime.now().strftime('%H:%M:%S')
+                _data={
+                        "type": "wallpost",
+                        "comment_text": response["text"],
+                        "post_id": post.id,
+                        "user_id": self.sender_id,
+                        "user_post": self.sender_name.username,
+                        "timecomment":now,
+                        "status" : "send_test",
+                        "html": div_temp
+                    }
+                await self.channel_layer.group_send(self.room_group_name, _data)        
 
     async def wallpost(self, res):
         """ Receive message from room group """
