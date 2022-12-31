@@ -1,7 +1,8 @@
 *.mp4
 *.mpeg4
 *.avi
-env/
-faces/
+venv/
+media/data_image/
 *.pt
 *.index
+*.sqlite3

@@ -1,25 +1,44 @@
 # simple-fake-detect
 
 install   
+
+Redis 6   
+```
+sudo add-apt-repository ppa:redislabs/redis
+sudo apt-get update
+sudo apt-get install redis
+
+/etc/init.d/redis-server restart
+```
+
+Виртуальная среда для работы с Django 3
 ```
 python3 -m venv <myenvname>
-```
 
-```
 source <myenvname>/bin/activate
-```
 
-```
 pip install --upgrade pip
 
-pip install torch==1.10.2+cu111 torchvision==0.11.3+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-
 pip install -r requirements.txt
+
+./manage.py makemigrations
+
+./manage.py migrate auth
+
+./manage.py migrate --run-syncdb
+
+./manage.py dumpdata > data_dump.json
 ```
 
 run   
 
 ```
-python serv2.py
+python manage.py runserver IP:PORT
+
+```
+
+test   
+```
+./manage.py shell < stat_utils/check_data1.py
 ```
 
