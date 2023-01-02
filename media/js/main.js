@@ -8,6 +8,7 @@ idk_block.id = "idl-block";
 idk_block.style.display = "none";
 idk_block.innerHTML = `<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
                        <button type="button" id="see_posts"  onclick="crate_data_all(this)">CRATE DATA ALL</button>
+                       количество символов <span id="count_text">0</span>
                        <div id="block_post"></div>
                        <br>
                        <h3>Enter message:</h3>
@@ -77,7 +78,7 @@ function handle(e) {
             if (arr.length!=0 && idx_arr>0) {
                 idx_arr--;
                 arr.splice(idx_arr, 1); 
-                
+                count_text.innerHTML = arr.length;  
             }
             //-------------------------->
             var value_pure = '';
@@ -126,8 +127,9 @@ function handle(e) {
                 }
                 show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
                                       `; //<div class="value_time">${value_time}</div>
-                //------------>                      
+                //------------>     
                 idx_arr++;
+                count_text.innerHTML = arr.length; 
             }
         } 
     }
