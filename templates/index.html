@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-<button type='button' class='Button' id="reg_bt">REGISTRATION</button>
-<button type='button' class='Button' id="log_bt">CHANGE USER</button>
+{% if username.is_authenticated %}
 <!--LOGIN-->
-<button type='button' class='Button' id="idk_bt">USER IDENTIFICATION KEYSTROKE</button>
+<button type='button' class='Button' id="idk_bt" onclick="KEYSTROKE(this)">USER IDENTIFICATION KEYSTROKE</button>
+<button type='button' class='Button' id="log_bt" onclick="CHANGEUSER(this)">CHANGE USER</button>
+{% else %}
+<button type='button' class='Button' id="log_bt" onclick="CHANGEUSER(this)">ENTER</button>
+<button type='button' class='Button' id="reg_bt" onclick="REG(this)">REGISTRATION</button>
+{% endif %}
+
 {% endblock content %}

@@ -20,6 +20,19 @@ class UserForm(UserCreationForm):
         model = User
         fields = ('username',)
 
+def user_page(request, user_id):
+    print (user_id)
+    posts = list(Post.objects.filter(user_post__id=user_id))
+    args = {}
+    args['username'] = auth.get_user(request) 
+    args['posts'] = posts
+    args.update(csrf(request))   
+    return render(request, 'user_page.html', args)
+
+def quit(request):
+    auth.logout(request)
+    return redirect("/")
+
 #@login_required       
 def mainpage(request):
     args = {}

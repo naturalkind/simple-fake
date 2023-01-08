@@ -1,0 +1,9 @@
+{% block content %}
+<div id="user_page">
+    ЭТО СТРАНИЦА ПОЛЬЗОВАТЕЛЯ
+    {% for post in posts %}
+                Посмотреть статисику поста #{{post.id}}
+    {% endfor %}    
+    
+</div>
+{% endblock content %}

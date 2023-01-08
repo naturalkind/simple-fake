@@ -3,6 +3,7 @@
 *.avi
 venv/
 media/data_image/
+.ipynb_checkpoints/
 *.pt
 *.index
 *.sqlite3

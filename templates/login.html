@@ -3,7 +3,11 @@
     <form action="/login/" method="POST" enctype="multipart/form-data" id="FormReg">
         {% csrf_token %}
         <hr>
-        <h3>CHANGE USER</h2>
+        {% if username.is_authenticated %}
+            <h3>CHANGE USER</h2>
+        {% else %}
+            <h3>ENTER USER</h2>
+        {% endif %}
         <span id='UploadArea'>
             <div id="name_pwd">    
                 <label id="icon" for="name"><i class="icon-user"></i></label>

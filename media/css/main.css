@@ -535,3 +535,42 @@ div#UserImage {
 div#UserImage img {
     margin: 5px;
 }
+
+#reg_bt, 
+#log_bt, 
+#idk_bt {
+    margin: 4px auto;
+} 
+
+a#user {
+    font-weight: bolder;
+    color: white;
+    cursor: pointer;
+}
+
+#block_post button{
+    width: 600px;
+    display: block;
+    margin: 4px auto;
+    font-weight: 600;
+    color: #ffffff;
+    background: #507299;
+    padding: 8px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    top: 0px;
+    border: none;
+    -moz-box-shadow: 0px 1px 3px rgba(000,000,000,0.5), inset 0px 0px 3px rgba(255,255,255,0.4); 
+    -moz-border-radius: 5px;
+}
+button#quit {
+    display: block;
+    position: relative;
+    float: right;
+    top: -5px;
+    background: #507299;
+    border: none;
+    font-size: 15px;
+    color: white;
+    padding: 5px;
+}

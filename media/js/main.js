@@ -158,24 +158,62 @@ function send_test(self) {
     show_value.innerHTML = "";
     keyTimes = {}
 }
-
 //----------------------------------->
+function USER(self, id) {
+    console.log(self, id)
+    var http = createRequestObject();
+    var linkfull = '/user_page/'+id;
+    if (http) {
+        http.open('get', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                //var data = JSON.parse(http.responseText);
+                //console.log(http.responseText);
+                blockup.innerHTML = `<div id="node">
+                                    <br>
+                                    ${http.responseText}
+                                    <br>
+                                    <button onclick="close_div()">close</button>
+                                </div>`
+                //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+                blockup.style.display = "block";
+                document.body.style.overflow = 'hidden';
+                //idk_block.style.display = "none";
+            }
+        }
+        http.send(null);  
+    }
+    
+}
 
-var reg_bt = document.getElementById("reg_bt");
-var log_bt = document.getElementById("log_bt");
-var idk_bt = document.getElementById("idk_bt");
-reg_bt.style.margin = "4px auto";
-log_bt.style.margin = "4px auto";
-idk_bt.style.margin = "4px auto";
+// выйти
+function quit(){
+    var cont = document.querySelector('body'); // ищем элемент с id
+    var http = createRequestObject();
+    if (http) {
+        http.open('get', '/logout');
+        http.onreadystatechange = function () {
+            if(http.readyState == 4) {
+                cont.innerHTML = http.responseText;
+                isLoading = false;
+                window.location.reload();
+            }
+        };
+        http.send(null);
+    } else {
+        document.location = link;
+    }
+}
 
 // Keystroke
-idk_bt.addEventListener('click', function(e) {
+function KEYSTROKE(self) {
     idk_block.style.display = "block";
+    user_info.style.display = "none";
     //registration.style.display = "none";
     // кнопки
-    reg_bt.style.display = "none";
-    log_bt.style.display = "none";
-    idk_bt.style.display = "none";
+    document.getElementById("log_bt").style.display = "none";
+    self.style.display = "none";
     // кнопка назад
     icon_back[0].style.display = "block"
     
@@ -183,23 +221,22 @@ idk_bt.addEventListener('click', function(e) {
     document.getElementById("logo24").style.display = "none";
     // отправлять каждую секунду данные
     //setInterval(recording_key, 1000);
-});
+};
 
 // регистрация 
-reg_bt.addEventListener('click', function(e) {
+function REG(self) {
     //registration.style.display = "block";
     registration()
-    reg_bt.style.display = "none";
-    log_bt.style.display = "none";
-    idk_bt.style.display = "none";
+    self.style.display = "none";
+    document.getElementById("log_bt").style.display = "none";
     // кнопка назад
     icon_back[0].style.display = "block"
-});
+};
 
-log_bt.addEventListener('click', function(e) {
-    reg_bt.style.display = "none";
+function CHANGEUSER(self) {
     log_bt.style.display = "none";
-    idk_bt.style.display = "none";
+    self.style.display = "none";
+    user_info.style.display = "none";
     // кнопка назад    
     icon_back[0].style.display = "block"
     var crsv = getCookie('csrftoken'); // токен
@@ -216,7 +253,7 @@ log_bt.addEventListener('click', function(e) {
         }
         http.send(null);  
     }    
-});   
+};   
 
 // кнопка назад     
 icon_back[0].addEventListener('click', function(e) {
@@ -258,7 +295,6 @@ function see_posts(self) {
         }
         http.send(null);  
     } 
-
 }
 
 // подготовка всех данных
@@ -321,7 +357,7 @@ function Register() {
 
 function close_div() {
     document.body.style.overflow = 'auto';
-    idk_block.style.display = "block";
+    //idk_block.style.display = "block";
     blockup.style.display = "none";
 }
 
@@ -341,12 +377,12 @@ function see_data(self) {
                                         <br>
                                         ${http.responseText}
                                         <br>
-                                        <button onclick="close_div()">закрыть</button>
+                                        <button onclick="close_div()">close</button>
                                     </div>`
                 //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
                 blockup.style.display = "block";
                 document.body.style.overflow = 'hidden';
-                idk_block.style.display = "none";
+                //idk_block.style.display = "none";
             }
         }
         http.send(null);  
@@ -362,11 +398,18 @@ ws.onmessage = function(data) {
     var message_data = JSON.parse(data.data);
     if (message_data["status"] == "send_test") {
         console.log(message_data, block_post);
+//        block_post.innerHTML += `<button type="button" onclick="see_data(this)" 
+//                                         indicator="send" class="Button" 
+//                                         style="margin: 4px auto; display: block;" post_id="${message_data["post_id"]}">
+//                                         Посмотреть статисику поста #${message_data["post_id"]}, 
+//                                         пользователя ${message_data["user_post"]}</button>`
+
         block_post.innerHTML += `<button type="button" onclick="see_data(this)" 
                                          indicator="send" class="Button" 
-                                         style="margin: 4px auto; display: block;" post_id="${message_data["post_id"]}">
+                                         post_id="${message_data["post_id"]}">
                                          Посмотреть статисику поста #${message_data["post_id"]}, 
                                          пользователя ${message_data["user_post"]}</button>`
+
     } else if (message_data["status"] == "MoreData") {
     } else if (message_data["status"]=="Done") { 
     }
