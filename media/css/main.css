@@ -117,7 +117,7 @@ button.Button {
     display: block;
     cursor: pointer;
     top: 0px;
-    position: relative;
+/*    position: relative;*/
 }
 
 button.Button:hover {

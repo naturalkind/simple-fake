@@ -6,7 +6,32 @@ icon_back[0].style.display = "none";
 var idk_block = document.createElement("div");
 idk_block.id = "idl-block";
 idk_block.style.display = "none";
-idk_block.innerHTML = `<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
+idk_block.innerHTML = `<button type="button" 
+                               id="see_posts" 
+                               onclick="see_posts(this)" 
+                               indicator="close">SEE ALL DATAS</button>
+                       <div id="block_post"></div>
+                       <br>
+                       <div>
+                           <input type="checkbox" id="test_user" name="test_user" onchange="getText(this)">
+                           <label for="horns">test user</label>
+                       </div>
+                       <br>
+                       <h3>Number of characters <span id="count_text">0</span>. Enter message:</h3>
+                       <br>
+                       <div id="show_value"></div>
+                       <br> 
+                       <div id="text_input" class="message_textarea" 
+                                            role="textbox" 
+                                            contenteditable="true" aria-multiline="true" aria-required="true" 
+                                            style="background: white;font-size: 26px;margin: 9px auto;"></div>
+                       <button type="button" onclick="send_test(this)" 
+                                             indicator="send" 
+                                             class="Button"
+                                             style="margin: 4px auto; display: block;">SEND</button>`
+                    
+/*
+`<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
                        <button type="button" id="see_posts"  onclick="crate_data_all(this)">CRATE DATA ALL</button>
                        количество символов <span id="count_text">0</span>
                        <div id="block_post"></div>
@@ -23,8 +48,8 @@ idk_block.innerHTML = `<button type="button" id="see_posts"  onclick="see_posts(
                                              indicator="send" 
                                              class="Button"
                                              style="margin: 4px auto; display: block;">SEND</button>`
-                    
-/*
+
+
 
 You can use the indexOf method like this:
 var index = array.indexOf(item);
@@ -144,21 +169,59 @@ function recording_key() {
 }
 
 function send_test(self) {
-    console.log("SEND_TEST");
+    console.log("SEND_TEST", document.getElementById("test_user").checked);
     var value_pure = '';
     for (var i = 0; i < arr.length; i++) {
         value_pure += arr[i].key_name;
     }    
-    
-    ws.send(JSON.stringify({'event': 'send_test', 
-                            'KEYPRESS': arr,
-                            'text':value_pure}));
+    if (document.getElementById("test_user").checked) {
+        ws.send(JSON.stringify({'event': 'send_test', 
+                                'KEYPRESS': arr,
+                                'text':value_pure,
+                                'id_post': temp_id,
+                                'test':document.getElementById("test_user").checked}));        
+        
+    } else {
+        ws.send(JSON.stringify({'event': 'send_test', 
+                                'KEYPRESS': arr,
+                                'text':value_pure,
+                                'test':document.getElementById("test_user").checked}));
+    }
     text_input.innerText = "";
     arr.length = 0;
     show_value.innerHTML = "";
     keyTimes = {}
 }
 //----------------------------------->
+var temp_id;
+function getText(self) {
+    if (self.checked) {
+        console.log(self, self.checked);
+        var http = createRequestObject();
+        var linkfull = '/gettext/';
+        if (http) {
+            http.open('get', linkfull);
+            http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            http.onreadystatechange = function () {
+                if (http.readyState == 4) {
+                    var data = JSON.parse(http.responseText);
+                    console.log(data);
+                    block_post.innerHTML = data["text"];
+                    temp_id = data["id_post"];
+                }
+            }
+            http.send(null);  
+        }        
+    }
+}
+
+
+// тестирование гипотиез
+function TESTKEY(self) {
+    console.log(self)
+}
+
+// страница пользователя
 function USER(self, id) {
     console.log(self, id)
     var http = createRequestObject();
@@ -236,7 +299,7 @@ function REG(self) {
 function CHANGEUSER(self) {
     log_bt.style.display = "none";
     self.style.display = "none";
-    user_info.style.display = "none";
+    try {user_info.style.display = "none";} catch (e) {};
     // кнопка назад    
     icon_back[0].style.display = "block"
     var crsv = getCookie('csrftoken'); // токен
@@ -281,20 +344,30 @@ function registration() {
 //---------------------------------->
 // все данные
 function see_posts(self) {
-    var crsv = getCookie('csrftoken'); // токен
-    var http = createRequestObject();
-    var linkfull = '/alldata/';
-    if (http) {
-        http.open('get', linkfull);
-        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-        http.setRequestHeader('X-CSRFToken', crsv);
-        http.onreadystatechange = function () {
-            if (http.readyState == 4) {
-                document.getElementById("block_post").innerHTML = http.responseText;
+    console.log(self);
+    if (self.getAttribute("indicator") == "close") {
+        var crsv = getCookie('csrftoken'); // токен
+        var http = createRequestObject();
+        var linkfull = '/alldata/';
+        if (http) {
+            http.open('get', linkfull);
+            http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            http.setRequestHeader('X-CSRFToken', crsv);
+            http.onreadystatechange = function () {
+                if (http.readyState == 4) {
+                    document.getElementById("block_post").innerHTML = http.responseText;
+                    self.setAttribute("indicator", "open");
+                    self.innerHTML = "CLOSE"
+                    
+                }
             }
-        }
-        http.send(null);  
-    } 
+            http.send(null);  
+        } 
+    } else {
+        self.setAttribute("indicator", "close");
+        document.getElementById("block_post").innerHTML = "";
+        self.innerHTML = "SEE ALL DATAS";
+    }
 }
 
 // подготовка всех данных

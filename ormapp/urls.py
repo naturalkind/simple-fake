@@ -29,6 +29,7 @@ urlpatterns = [
     re_path(r'^data/(?P<post>\d+)/$', keystroke.post), # страница материала
     re_path(r'^user_page/(?P<user_id>\d+)/$', keystroke.user_page), # страница пользователя
     path(r'logout/', keystroke.quit),
+    path(r'gettext/', keystroke.gettext),
     path(r'alldata/', keystroke.alldata),
     path(r'cratealldata/', keystroke.cratealldata),
     

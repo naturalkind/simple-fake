@@ -15,10 +15,34 @@ import pandas as pd
 import csv
 import sqlite3
 
+import io
+import requests
+import seaborn as sns
+import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+from collections import Counter
+from scipy.stats import mannwhitneyu
+from scipy.stats import ttest_ind
+from scipy.stats import norm
+
+plt.style.use('ggplot')
+
+
+
 class UserForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username',)
+
+def gettext(request):
+    print ("GETTEXT", request.user.pk)
+    posts = list(Post.objects.filter(user_post__id=request.user.pk))
+    t_l = []
+    for p in posts:
+        t_l.append(len(p.text))
+    to_client = posts[t_l.index(min(t_l))]
+    return JsonResponse({"text":to_client.text, "id_post":to_client.id})
+
 
 def user_page(request, user_id):
     print (user_id)
