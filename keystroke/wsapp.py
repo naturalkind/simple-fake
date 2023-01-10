@@ -188,7 +188,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_name = "main"
         self.sender_id = self.scope['user'].id
-        self.room_group_name = self.room_name
+        self.room_group_name = f"{self.room_name}_{self.sender_id}"
         self.sender_name = self.scope['user']
         if str(self.scope['user']) != 'AnonymousUser':
             self.image_user = self.scope['user'].image_user
@@ -287,12 +287,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                         }
                     await self.channel_layer.group_send(self.room_group_name, _data)  
                 else:
-                
-                
-                
-                    
                     post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
-#                    print ("ТЕСТИРОВАНИЕ", response, post)
                     T0 = post.text.lower().replace("\n", "")
                     T1 = response["text"].lower().replace("\n", "")
                     
@@ -301,13 +296,13 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     dt0 = time_pair(post.pure_data)
                     dt1 = time_pair(response["KEYPRESS"])
                     
-                    print (dt0)
-                    print (dt1)
+                    print (T0)
+                    print (T1)
                     test_list=[]
                     for pair_b in dt1['pair'].values.tolist():
                         series_1=dt0[dt0['pair'] == pair_b]['time']#.values
                         series_2=dt1[dt1['pair'] == pair_b]['time']#.values
-                        print (pair_b, len(series_1), len(series_2))
+                        #print (pair_b, len(series_1), len(series_2))
                         if len(series_1) > 3 and len(series_2) > 3:
                             test_list_key = def_boot(series_1.astype("float"), 
                                                      series_2.astype("float"),
@@ -316,8 +311,8 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
                     data_rez = data_rez[data_rez['p-value'].notna()]
                     data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
-                    print (data_rez['p-value'].values.tolist())#to_numpy()
-                    print (data_rez['pair'].values.tolist())
+                    #print (data_rez['p-value'].values.tolist())#to_numpy()
+                    #print (data_rez['pair'].values.tolist())
                     
                     A1 = data_rez['pair'].values.tolist() 
                     B1 = data_rez['p-value'].values.tolist()

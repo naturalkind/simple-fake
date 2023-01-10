@@ -1,7 +1,8 @@
 {% block content %}
     {% for message in post %}
         <button type="button" onclick="see_data(this)" indicator="send" post_id="{{message.id}}">
-            Посмотреть статисику поста #{{message.id}}, пользователя {{message.user_post.username}}
+            {{message.user_post.username}}, ID {{message.id}} - 
+            {{message.text|truncatechars:50}} 
         </button>
     {% endfor %}
 {% endblock content %}

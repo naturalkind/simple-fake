@@ -170,30 +170,59 @@ function recording_key() {
     //keyTimes = {}; // удаляет все
 }
 
+//function send_test(self) {
+//    console.log("SEND_TEST", document.getElementById("test_user").checked);
+//    var value_pure = '';
+//    for (var i = 0; i < arr.length; i++) {
+//        value_pure += arr[i].key_name;
+//    }    
+//    if (document.getElementById("test_user").checked) {
+//        ws.send(JSON.stringify({'event': 'send_test', 
+//                                'KEYPRESS': arr,
+//                                'text':value_pure,
+//                                'id_post': temp_id,
+//                                'test':document.getElementById("test_user").checked}));        
+//        
+//    } else {
+//        ws.send(JSON.stringify({'event': 'send_test', 
+//                                'KEYPRESS': arr,
+//                                'text':value_pure,
+//                                'test':document.getElementById("test_user").checked}));
+//    }
+//    text_input.innerText = "";
+//    arr.length = 0;
+//    show_value.innerHTML = "";
+//    keyTimes = {}
+//}
+
 function send_test(self) {
-    console.log("SEND_TEST", document.getElementById("test_user").checked);
     var value_pure = '';
     for (var i = 0; i < arr.length; i++) {
         value_pure += arr[i].key_name;
-    }    
-    if (document.getElementById("test_user").checked) {
+    }       
+    try {
+        document.getElementById("test_user").checkedж
         ws.send(JSON.stringify({'event': 'send_test', 
                                 'KEYPRESS': arr,
                                 'text':value_pure,
                                 'id_post': temp_id,
-                                'test':document.getElementById("test_user").checked}));        
-        
-    } else {
+                                'test':document.getElementById("test_user").checked}));    
+    } catch(e) {
         ws.send(JSON.stringify({'event': 'send_test', 
                                 'KEYPRESS': arr,
                                 'text':value_pure,
-                                'test':document.getElementById("test_user").checked}));
+                                'test': false}));  
+    
     }
+ 
     text_input.innerText = "";
     arr.length = 0;
+    count_text.innerHTML = 0;
     show_value.innerHTML = "";
     keyTimes = {}
 }
+
+
 //----------------------------------->
 var temp_id;
 function getText(self) {

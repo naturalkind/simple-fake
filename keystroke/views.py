@@ -163,7 +163,7 @@ def post(request, post):
         #json_data = json.dumps(post_id.pure_data)
         print (post, request.user.username, post_id.pure_data)#, json_data)
         print (T)
-        div_temp = f"<div id='full_nameuser'>{request.user.username}</div><div id='full_text'>{T}</div><br><table><tbody>"       
+        div_temp = f"<div id='full_nameuser'>{post_id.user_post.username}</div><div id='full_text'>{T}</div><br><table><tbody>"       
         np_zeros = np.zeros((len(combination), 2)) 
         for ih, h in enumerate(combination):
             idx = indices(T, h)
