@@ -137,13 +137,13 @@ id_list = df['id'].unique()
 text_all = [0.0, 0.0, 0.0, 0.0]
 for i in range(0,len(id_list)):
     first_t=id_list[i]
-    JS=eval(df[df['id']==first_t]['pure_data'][i])    
-    time=(time_pair(JS,first_t))
-    #    print(time)
+    JS=eval(df[df['id']==first_t]['pure_data'][i])  
+    time=(time_pair(JS, first_t))
     text_all=np.vstack([text_all, time])
-dataset=pd.DataFrame(text_all[1:],columns=['id',  'time_key', 'between','pair'])
+    #print(text_all)
+dataset=pd.DataFrame(text_all[1:],columns=['id', 'time_key', 'between','pair'])
 
-dataset.head()
+print (dataset.head())
 
 data_count=dataset.groupby(['id','pair'])['time_key'].count().reset_index()
 

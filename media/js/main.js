@@ -12,11 +12,6 @@ idk_block.innerHTML = `<button type="button"
                                indicator="close">SEE ALL DATAS</button>
                        <div id="block_post"></div>
                        <br>
-                       <div>
-                           <input type="checkbox" id="test_user" name="test_user" onchange="getText(this)">
-                           <label for="horns">test user</label>
-                       </div>
-                       <br>
                        <h3>Number of characters <span id="count_text">0</span>. Enter message:</h3>
                        <br>
                        <div id="show_value"></div>
@@ -31,6 +26,13 @@ idk_block.innerHTML = `<button type="button"
                                              style="margin: 4px auto; display: block;">SEND</button>`
                     
 /*
+
+                       <div>
+                           <input type="checkbox" id="test_user" name="test_user" onchange="getText(this)">
+                           <label for="horns">test user</label>
+                       </div>
+                       <br>
+
 `<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
                        <button type="button" id="see_posts"  onclick="crate_data_all(this)">CRATE DATA ALL</button>
                        количество символов <span id="count_text">0</span>
@@ -198,10 +200,12 @@ function getText(self) {
     if (self.checked) {
         console.log(self, self.checked);
         var http = createRequestObject();
+        var crsv = getCookie('csrftoken'); // токен
         var linkfull = '/gettext/';
         if (http) {
-            http.open('get', linkfull);
+            http.open('post', linkfull);
             http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            http.setRequestHeader('X-CSRFToken', crsv);
             http.onreadystatechange = function () {
                 if (http.readyState == 4) {
                     var data = JSON.parse(http.responseText);
@@ -210,7 +214,8 @@ function getText(self) {
                     temp_id = data["id_post"];
                 }
             }
-            http.send(null);  
+            let data = JSON.stringify({"post_id": self.getAttribute("post_id")});
+            http.send(data);  
         }        
     }
 }
@@ -447,6 +452,7 @@ function see_data(self) {
         http.onreadystatechange = function () {
             if (http.readyState == 4) {
                 blockup.innerHTML = `<div id="node">
+                                        <input type="checkbox" id="test_user" name="test_user" onchange="getText(this)" post_id="${id_p}">
                                         <br>
                                         ${http.responseText}
                                         <br>

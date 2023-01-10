@@ -34,14 +34,22 @@ class UserForm(UserCreationForm):
         model = User
         fields = ('username',)
 
+#def gettext(request):
+#    print ("GETTEXT", request.user.pk)
+#    posts = list(Post.objects.filter(user_post__id=request.user.pk))
+#    t_l = []
+#    for p in posts:
+#        t_l.append(len(p.text))
+#    to_client = posts[t_l.index(min(t_l))]
+#    return JsonResponse({"text":to_client.text, "id_post":to_client.id})
+
+# выбираю любой текст
 def gettext(request):
-    print ("GETTEXT", request.user.pk)
-    posts = list(Post.objects.filter(user_post__id=request.user.pk))
-    t_l = []
-    for p in posts:
-        t_l.append(len(p.text))
-    to_client = posts[t_l.index(min(t_l))]
-    return JsonResponse({"text":to_client.text, "id_post":to_client.id})
+    json_data = json.loads(request.body)
+    print ("GETTEXT", request.user.pk, json_data)
+    post = Post.objects.get(pk=json_data["post_id"])
+    return JsonResponse({"text":post.text, "id_post":post.id})
+
 
 
 def user_page(request, user_id):

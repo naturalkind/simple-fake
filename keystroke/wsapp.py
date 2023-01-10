@@ -117,6 +117,23 @@ def def_boot(series_1, series_2, pair_b, test_list_all):
     print(pair_b, 'p_value=', booted_data["p_value"])
     return test_list_all
 
+def time_pair(JS):
+    time_a=[]
+    for i in range(len(JS)-1):
+        time_JS=[]
+        pair=JS[i]['key_name']+JS[i+1]['key_name']
+        t11= JS[i]['time_keydown']
+        t12= JS[i]['time_keyup']
+        t1=t12-t11
+        t21= JS[i+1]['time_keydown']
+        t22= JS[i+1]['time_keyup']
+        t2=t22-t21
+        time_JS.append(pair)
+        time_JS.append(t21-t12)    
+        time_a.append(time_JS)
+    dataset = pd.DataFrame(time_a, columns=['pair', 'time'])
+    return dataset
+
 
 combination = ["ст", "то", "но", "на", "по", "ен", "ни", "не", "ко", "ра", "ов", "ро", "го", "ал",
                "пр", "ли", "ре", "ос", "во", "ка", "ер", "от", "ол", "ор", "та", "ва", "ел", "ть",
@@ -147,6 +164,16 @@ def gen_pd(T, post):
               list_data_line=[]
               t_up = post[k]["time_keyup"]
               t_dw = post[k+1]["time_keydown"]
+              """
+                t11= JS[i]['time_keydown']
+                t12= JS[i]['time_keyup']
+                t1=t12-t11
+                t21= JS[i+1]['time_keydown']
+                t22= JS[i+1]['time_keyup']
+                t2=t22-t21              
+              
+              """
+              
               list_data_line.append(h)
               list_data_line.append(t_dw-t_up)
               list_data_all.append(list_data_line)  
@@ -269,15 +296,19 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     T0 = post.text.lower().replace("\n", "")
                     T1 = response["text"].lower().replace("\n", "")
                     
-                    dt0 = gen_pd(T0, post.pure_data)
-                    dt1 = gen_pd(T1, response["KEYPRESS"])
+#                    dt0 = gen_pd(T0, post.pure_data)
+#                    dt1 = gen_pd(T1, response["KEYPRESS"])
+                    dt0 = time_pair(post.pure_data)
+                    dt1 = time_pair(response["KEYPRESS"])
+                    
+                    print (dt0)
+                    print (dt1)
                     test_list=[]
-                    for pair_b in combination:
-                        
+                    for pair_b in dt1['pair'].values.tolist():
                         series_1=dt0[dt0['pair'] == pair_b]['time']#.values
                         series_2=dt1[dt1['pair'] == pair_b]['time']#.values
-#                        print (pair_b, len(series_1), len(series_2))
-                        if len(series_1) >= 1 and len(series_2) >= 1:
+                        print (pair_b, len(series_1), len(series_2))
+                        if len(series_1) > 3 and len(series_2) > 3:
                             test_list_key = def_boot(series_1.astype("float"), 
                                                      series_2.astype("float"),
                                                      pair_b,
