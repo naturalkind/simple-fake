@@ -171,8 +171,6 @@ print (dataset_time)
 """
 
 id_list=dataset['id'].unique()
-
-id_list=dataset['id'].unique()
 test_list=[]
 #for id_1 in range(len(id_list)-1):
 for id_1 in range(1,5):
@@ -229,7 +227,8 @@ for id_1 in range(len(id_list)-1):
                                          series_2.astype("float"),
                                          pair_b,
                                          id_first,
-                                         id_second,test_list)
+                                         id_second,
+                                         test_list)
 
 time_key_e = pd.DataFrame(test_list, columns=['id_1', 'id_2' ,'pair','p-value'])
 print (time_key_e)

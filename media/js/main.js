@@ -482,7 +482,15 @@ ws.onmessage = function(data) {
                                          post_id="${message_data["post_id"]}">
                                          Посмотреть статисику поста #${message_data["post_id"]}, 
                                          пользователя ${message_data["user_post"]}</button>`
-
+    } else if (message_data["status"] == "send_test_p") {
+        blockup.innerHTML = `<div id="node">
+                                        <br>
+                                        ${message_data["html"]}
+                                        <br>
+                                        <button onclick="close_div()">close</button>
+                                    </div>`        
+        blockup.style.display = "block";
+        document.body.style.overflow = 'hidden';
     } else if (message_data["status"] == "MoreData") {
     } else if (message_data["status"]=="Done") { 
     }

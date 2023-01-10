@@ -103,6 +103,20 @@ def get_bootstrap(data_column_1, # числовые значения перво�
             "quants": quants, 
             "p_value": p_value}
 
+def def_boot(series_1, series_2, pair_b, test_list_all):
+    test_list=[]
+    booted_data = get_bootstrap(series_1, 
+                                series_2, # числовые значения второй выборки
+                                boot_it = 1000, # количество бутстрэп-подвыборок
+                                statistic = np.median, # интересующая нас статистика
+                                bootstrap_conf_level = 0.95 # уровень значимости
+                                )
+    test_list.append(pair_b)
+    test_list.append(booted_data["p_value"])
+    test_list_all.append(test_list)
+    print(pair_b, 'p_value=', booted_data["p_value"])
+    return test_list_all
+
 
 combination = ["ст", "то", "но", "на", "по", "ен", "ни", "не", "ко", "ра", "ов", "ро", "го", "ал",
                "пр", "ли", "ре", "ос", "во", "ка", "ер", "от", "ол", "ор", "та", "ва", "ел", "ть",
@@ -137,10 +151,11 @@ def gen_pd(T, post):
               list_data_line.append(t_dw-t_up)
               list_data_all.append(list_data_line)  
     dataset = pd.DataFrame(list_data_all, columns=['pair', 'time'])
-    dataset['time'][dataset['time'] < 0] = np.nan
+#    dataset['time'][dataset['time'] < 0] = np.nan
     return dataset     
 
-
+def sigmoid(z):
+    return 1/(1 + np.exp(-z))
 
 class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -245,6 +260,10 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                         }
                     await self.channel_layer.group_send(self.room_group_name, _data)  
                 else:
+                
+                
+                
+                    
                     post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
 #                    print ("ТЕСТИРОВАНИЕ", response, post)
                     T0 = post.text.lower().replace("\n", "")
@@ -252,16 +271,47 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     
                     dt0 = gen_pd(T0, post.pure_data)
                     dt1 = gen_pd(T1, response["KEYPRESS"])
+                    test_list=[]
+                    for pair_b in combination:
                         
+                        series_1=dt0[dt0['pair'] == pair_b]['time']#.values
+                        series_2=dt1[dt1['pair'] == pair_b]['time']#.values
+#                        print (pair_b, len(series_1), len(series_2))
+                        if len(series_1) >= 1 and len(series_2) >= 1:
+                            test_list_key = def_boot(series_1.astype("float"), 
+                                                     series_2.astype("float"),
+                                                     pair_b,
+                                                     test_list)                      
+                    data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
+                    data_rez = data_rez[data_rez['p-value'].notna()]
+                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
+                    print (data_rez['p-value'].values.tolist())#to_numpy()
+                    print (data_rez['pair'].values.tolist())
+                    
+                    A1 = data_rez['pair'].values.tolist() 
+                    B1 = data_rez['p-value'].values.tolist()
+                    
+                    div_temp = f"<table><tbody>" 
+                    for io, o in enumerate(A1):
+                        div_temp += f"<tr><td>{o}</td><td>{B1[io]}</td></tr>"
+                    div_temp += "</tbody></table>"                     
+                    """
+                    print (dt1)    
                     booted_data = get_bootstrap(dt0["time"].astype("float"), 
                                                 dt1["time"].astype("float"), # числовые значения второй выборки
                                                 boot_it = 1000, # количество бутстрэп-подвыборок
                                                 statistic = np.median, # интересующая нас статистика
                                                 bootstrap_conf_level = 0.95 # уровень значимости
-                                                )                    
+                                                ) 
+                    print (booted_data['boot_data'])                   
                     print (booted_data['p_value']) 
-                    
-                    
+                    """
+                    _data={
+                            "type": "wallpost",
+                            "status" : "send_test_p",
+                            "html": div_temp
+                        }
+                    await self.channel_layer.group_send(self.room_group_name, _data)                     
                     
 
     async def wallpost(self, res):
