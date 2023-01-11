@@ -28,12 +28,12 @@ from scipy.stats import norm
 plt.style.use('ggplot')
 
 
-
 class UserForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username',)
 
+# выбираю post с самым коротким текстом
 #def gettext(request):
 #    print ("GETTEXT", request.user.pk)
 #    posts = list(Post.objects.filter(user_post__id=request.user.pk))
@@ -268,8 +268,6 @@ def cratealldata(request):
 #    return JsonResponse({"answer":f'/media/data_image/{request.user.path_data}/key_median.csv',
 #                         "answer_count": f'/media/data_image/{request.user.path_data}/key_count.csv'})
 #    
-    
-    
     
     
    

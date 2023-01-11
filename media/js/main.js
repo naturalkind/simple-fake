@@ -27,32 +27,6 @@ idk_block.innerHTML = `<button type="button"
                     
 /*
 
-                       <div>
-                           <input type="checkbox" id="test_user" name="test_user" onchange="getText(this)">
-                           <label for="horns">test user</label>
-                       </div>
-                       <br>
-
-`<button type="button" id="see_posts"  onclick="see_posts(this)">SEE ALL DATAS</button>
-                       <button type="button" id="see_posts"  onclick="crate_data_all(this)">CRATE DATA ALL</button>
-                       количество символов <span id="count_text">0</span>
-                       <div id="block_post"></div>
-                       <br>
-                       <h3>Enter message:</h3>
-                       <br>
-                       <div id="show_value"></div>
-                       <br> 
-                       <div id="text_input" class="message_textarea" 
-                                            role="textbox" 
-                                            contenteditable="true" aria-multiline="true" aria-required="true" 
-                                            style="background: white;font-size: 26px;margin: 9px auto;"></div>
-                       <button type="button" onclick="send_test(this)" 
-                                             indicator="send" 
-                                             class="Button"
-                                             style="margin: 4px auto; display: block;">SEND</button>`
-
-
-
 You can use the indexOf method like this:
 var index = array.indexOf(item);
 if (index !== -1) {
@@ -72,95 +46,172 @@ document.getElementById("testbox").appendChild(idk_block);
 
 var text_input = document.getElementById("text_input");
 
-var keyTimes = {};
 var arr = [];
+//"Backspace", "ArrowLeft", "ArrowRight", 
+list_exept = ["ArrowDown", "ArrowUp", "CapsLock", "Alt", "Control", "Shift"]
+// подготовка текста к отправке на сервер
 var idx_arr = 0;
-text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = handle;
+text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = text_input.onclick = handle;
+//text_input.textContent
+
+function getSelectionPosition () {
+  var selection = window.getSelection();
+  idx_arr = selection.focusOffset
+}
+
+
 function handle(e) {
-    //console.log("WALL KEYPRESS", e, e.type, keyTimes);
-    if (e.type == "keydown") {
-        if (!keyTimes["key" + e.which]) {
-            keyTimes["key" + e.which] = new Date().getTime();
-        } else {
-            if (e.key == "CapsLock" || e.key == "Alt" || e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift" || e.key=="ArrowLeft" || e.key=="ArrowRight") {
-            
-            } else if (e.key!="Backspace") {
-                var _data = {"time_keydown": keyTimes["key" + e.which],
-                                             "key_name":e.key, 
-                                             "key_code":e.keyCode}           
-                arr.push(_data);
-                idx_arr++;
-                
+    if (e.type == "click") {
+        //var length = text_input.innerHTML;
+        getSelectionPosition ();
+        //console.log("WALL KEYPRESS", e, e.type, e.anchorOffset);
+    }
+    if (list_exept.indexOf(e.key) == -1) {
+        if (e.type == "keydown") {
+            if (e.key=="Backspace") {
+                if (arr.length!=0) {
+                    idx_arr--; 
+                    arr.splice(idx_arr, 1);
+                    count_text.innerHTML = arr.length;  
+                }
+                //-------------------------->
                 var value_pure = '';
-                var value_time = '';
                 for (var i = 0; i < arr.length; i++) {
                     value_pure += arr[i].key_name;
-                    value_time += arr[i].time_press;
                 }
-                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
-                                      `; //<div class="value_time">${value_time}</div>
+                show_value.innerHTML =`<div class="value_pure">${text_input.innerText}</div>`;
+                //show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`            
+            } else if (e.key=="ArrowLeft") {
+                if (idx_arr > 0) {
+                    idx_arr--;
+                }
+            } else if (e.key=="ArrowRight") { 
+                if (arr.length>idx_arr) {
+                    idx_arr++;
+                }         
+            } else {
+                //-------------------------------->
+                var keyTimes = {};
+                keyTimes["key_code"] = e.keyCode;
+                keyTimes["key_name"] = e.key;
+                keyTimes["time_keydown"] = new Date().getTime()/1000.0;
+                arr.push(keyTimes); 
+                idx_arr++           
+//                console.log(e.key, list_exept.indexOf(e.key), keyTimes, arr.length, text_input.innerText.length);
             }
         }
-        if (e.key=="Backspace") {
-            if (arr.length!=0 && idx_arr>0) {
-                idx_arr--;
-                arr.splice(idx_arr, 1); 
-                count_text.innerHTML = arr.length;  
+        if (e.type == "keyup") {
+            if (arr.length>0) {
+                let time_up = new Date().getTime()/1000.0;
+                arr[arr.length-1]["time_keyup"] = time_up;
+                arr[arr.length-1]["time_press"] = time_up - arr[arr.length-1]["time_keydown"]//) / 1000.0;
+    //            console.log(arr, arr[arr.length-1]);
             }
-            //-------------------------->
-            var value_pure = '';
+        }
+        if (arr.length == text_input.innerText.length) {
+            var value_pure = "";
             for (var i = 0; i < arr.length; i++) {
                 value_pure += arr[i].key_name;
             }
-            show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`            
-        } else if (e.key=="ArrowLeft") {
-            if (idx_arr > 0) {
-                idx_arr--;
-            }
-        } else if (e.key=="ArrowRight") { 
-            if (arr.length>idx_arr) {
-                idx_arr++;
-            }         
-        } 
-         
-    } 
-    if (e.type == "keyup") {
-        if (keyTimes["key" + e.which]) {
-            if (e.key=="ArrowLeft") {
-            } else if (e.key=="ArrowRight") { 
-            
-            } else if (e.key=="Backspace" || e.key == "CapsLock" || e.key == "Alt") { 
-            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift") {
-                                   
-            } else {
-                var time_up = new Date().getTime()
-                var x = time_up - keyTimes["key" + e.which];
-                //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
-                var _data = {"time_keydown": keyTimes["key" + e.which] / 1000.0,
-                             "time_press":x / 1000.0, 
-                             "key_name":e.key, 
-                             "key_code":e.keyCode, 
-                             "time_keyup":time_up/1000.0}
-                //arr.push(_data);
-                arr.splice(idx_arr, 0, _data);
-                delete keyTimes["key" + e.which];
-//                console.log("KEYUP", e.key, x / 1000.0, idx_arr, arr.length);
-                //------------->
-                var value_pure = '';
-                var value_time = '';
-                for (var i = 0; i < arr.length; i++) {
-                    value_pure += arr[i].key_name;
-                    value_time += arr[i].time_press;
-                }
-                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
-                                      `; //<div class="value_time">${value_time}</div>
-                //------------>     
-                idx_arr++;
-                count_text.innerHTML = arr.length; 
-            }
-        } 
+            show_value.innerHTML =`<div class="value_pure">${text_input.innerText}</div>`;
+            count_text.innerHTML = arr.length; 
+            //console.log(text_input.innerText, "<---->", value_pure, text_input.innerText.trim() === value_pure.trim());
+        }
     }
 }
+
+
+//var keyTimes = {};
+//var arr = [];
+//var value_pure = "";
+//var idx_arr = 0;
+//function handle(e) {
+//    if (e.type == "click") {
+//        console.log("WALL KEYPRESS", e, e.type, keyTimes);
+//    }
+//    
+//    if (e.type == "keydown") {
+//        if (!keyTimes["key" + e.which]) {
+//            keyTimes["key" + e.which] = new Date().getTime();
+//        } else {
+//            if (e.key == "CapsLock" || e.key == "Alt" || e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift" || e.key=="ArrowLeft" || e.key=="ArrowRight") {
+//            
+//            } else if (e.key!="Backspace") {
+//                var _data = {"time_keydown": keyTimes["key" + e.which],
+//                                             "key_name":e.key, 
+//                                             "key_code":e.keyCode}           
+//                arr.push(_data);
+//                idx_arr++;
+//                
+//                var value_pure = '';
+//                var value_time = '';
+//                for (var i = 0; i < arr.length; i++) {
+//                    value_pure += arr[i].key_name;
+//                    value_time += arr[i].time_press;
+//                }
+//                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
+//                                      `; //<div class="value_time">${value_time}</div>
+//            }
+//        }
+//        if (e.key=="Backspace") {
+//            if (arr.length!=0 && idx_arr>0) {
+//                idx_arr--;
+//                arr.splice(idx_arr, 1); 
+//                count_text.innerHTML = arr.length;  
+//            }
+//            //-------------------------->
+//            var value_pure = '';
+//            for (var i = 0; i < arr.length; i++) {
+//                value_pure += arr[i].key_name;
+//            }
+//            show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`            
+//        } else if (e.key=="ArrowLeft") {
+//            if (idx_arr > 0) {
+//                idx_arr--;
+//            }
+//        } else if (e.key=="ArrowRight") { 
+//            if (arr.length>idx_arr) {
+//                idx_arr++;
+//            }         
+//        } 
+//    } 
+//    if (e.type == "keyup") {
+//        if (keyTimes["key" + e.which]) {
+//            if (e.key=="ArrowLeft") {
+//            } else if (e.key=="ArrowRight") { 
+//            
+//            } else if (e.key=="Backspace" || e.key == "CapsLock" || e.key == "Alt") { 
+//            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift") {
+//                                   
+//            } else {
+//                var time_up = new Date().getTime()
+//                var x = time_up - keyTimes["key" + e.which];
+//                //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
+//                var _data = {"time_keydown": keyTimes["key" + e.which] / 1000.0,
+//                             "time_press":x / 1000.0, 
+//                             "key_name":e.key, 
+//                             "key_code":e.keyCode, 
+//                             "time_keyup":time_up/1000.0}
+//                //arr.push(_data);
+//                arr.splice(idx_arr, 0, _data);
+//                delete keyTimes["key" + e.which];
+////                console.log("KEYUP", e.key, x / 1000.0, idx_arr, arr.length);
+//                //------------->
+//                var value_pure = '';
+//                var value_time = '';
+//                for (var i = 0; i < arr.length; i++) {
+//                    value_pure += arr[i].key_name;
+//                    value_time += arr[i].time_press;
+//                }
+//                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
+//                                      `; //<div class="value_time">${value_time}</div>
+//                //------------>     
+//                idx_arr++;
+//                count_text.innerHTML = arr.length; 
+//            }
+//        } 
+//    }
+//}
 
 function recording_key() {
     console.log('tick', arr)
@@ -170,56 +221,34 @@ function recording_key() {
     //keyTimes = {}; // удаляет все
 }
 
-//function send_test(self) {
-//    console.log("SEND_TEST", document.getElementById("test_user").checked);
-//    var value_pure = '';
-//    for (var i = 0; i < arr.length; i++) {
-//        value_pure += arr[i].key_name;
-//    }    
-//    if (document.getElementById("test_user").checked) {
-//        ws.send(JSON.stringify({'event': 'send_test', 
-//                                'KEYPRESS': arr,
-//                                'text':value_pure,
-//                                'id_post': temp_id,
-//                                'test':document.getElementById("test_user").checked}));        
-//        
-//    } else {
-//        ws.send(JSON.stringify({'event': 'send_test', 
-//                                'KEYPRESS': arr,
-//                                'text':value_pure,
-//                                'test':document.getElementById("test_user").checked}));
-//    }
-//    text_input.innerText = "";
-//    arr.length = 0;
-//    show_value.innerHTML = "";
-//    keyTimes = {}
-//}
 
 function send_test(self) {
     var value_pure = '';
     for (var i = 0; i < arr.length; i++) {
         value_pure += arr[i].key_name;
-    }       
-    try {
-        document.getElementById("test_user").checkedж
-        ws.send(JSON.stringify({'event': 'send_test', 
-                                'KEYPRESS': arr,
-                                'text':value_pure,
-                                'id_post': temp_id,
-                                'test':document.getElementById("test_user").checked}));    
-    } catch(e) {
-        ws.send(JSON.stringify({'event': 'send_test', 
-                                'KEYPRESS': arr,
-                                'text':value_pure,
-                                'test': false}));  
-    
-    }
- 
-    text_input.innerText = "";
-    arr.length = 0;
-    count_text.innerHTML = 0;
-    show_value.innerHTML = "";
-    keyTimes = {}
+    } 
+    //console.log(value_pure, text_input.innerText, value_pure == text_input.innerText)
+          
+//    try {
+//        document.getElementById("test_user").checkedж
+//        ws.send(JSON.stringify({'event': 'send_test', 
+//                                'KEYPRESS': arr,
+//                                'text':value_pure,
+//                                'id_post': temp_id,
+//                                'test':document.getElementById("test_user").checked}));    
+//    } catch(e) {
+//        ws.send(JSON.stringify({'event': 'send_test', 
+//                                'KEYPRESS': arr,
+//                                'text':value_pure,
+//                                'test': false}));  
+//    
+//    }
+// 
+//    text_input.innerText = "";
+//    arr.length = 0;
+//    count_text.innerHTML = 0;
+//    show_value.innerHTML = "";
+//    keyTimes = {}
 }
 
 

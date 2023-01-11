@@ -182,10 +182,11 @@ for id_1 in range(1,5):
         id_second = id_list[id_2]  
     #    print(id_1,id_2)
         p1=set(dataset[dataset['id']==id_first]['pair'].values)
-    #    print(p1)
+#        print(p1)
         p2=set(dataset[dataset['id']==id_second]['pair'].values)
-    #    print(p2)
+#        print(p2)
         pair_all=list(p1&p2)#[:100]
+#        print (">>>>>>>>>>", pair_all)
         for pair_b in pair_all:
 #      print(id_1, id_2, pair_b)         
             series_1=dataset[(dataset['id'] == id_first) & (dataset['pair'] == pair_b)]['between']#.values
@@ -233,3 +234,4 @@ for id_1 in range(len(id_list)-1):
 time_key_e = pd.DataFrame(test_list, columns=['id_1', 'id_2' ,'pair','p-value'])
 print (time_key_e)
 #time_key_e.to_csv('time_key_i.csv')
+#['ис', 'ер', ' п', 'мо', 'ти', 'а ', 'та', 'от', 'о ', 'я ', 'ес', 'ет', 'по', 'ка', 'аз', 'оп', ' в', 'ус', 'за', 'сн', 'ст', 'ро', 'зм', 'и ', 'в ', 'то', 'т ', 'м ', 'си', 'на', 'не', ' н', ', ', 'дн', 'ор', 'ов', 'сп', 'ем', 'е ', 'ме', 'но', 'ри', 'ом', 'ос', 'я,', 'ат', 'ся', 'те', 'ви', 'ел', ' с', ' б', ' и', 'бо', ' у']

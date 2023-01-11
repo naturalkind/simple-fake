@@ -235,7 +235,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
         """
         
         response = json.loads(text_data)
-        #print (response, self.scope['user'])
+        print (response, self.scope['user'])
         event = response.get("event", None)
         if self.scope['user'].is_authenticated:  
             # KEYSTROKE
@@ -299,10 +299,12 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     print (T0)
                     print (T1)
                     test_list=[]
-                    for pair_b in dt1['pair'].values.tolist():
+                    # повторим этот эксперимент несколько раз
+                    #print (len(dt1['pair'].values.tolist()), len(set(dt1['pair'].values.tolist()))) 
+                    for pair_b in set(dt1['pair'].values.tolist()):
                         series_1=dt0[dt0['pair'] == pair_b]['time']#.values
                         series_2=dt1[dt1['pair'] == pair_b]['time']#.values
-                        #print (pair_b, len(series_1), len(series_2))
+                        print (pair_b, len(series_1), len(series_2))
                         if len(series_1) > 3 and len(series_2) > 3:
                             test_list_key = def_boot(series_1.astype("float"), 
                                                      series_2.astype("float"),
@@ -310,7 +312,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                                                      test_list)                      
                     data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
                     data_rez = data_rez[data_rez['p-value'].notna()]
-                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
+#                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
                     #print (data_rez['p-value'].values.tolist())#to_numpy()
                     #print (data_rez['pair'].values.tolist())
                     
