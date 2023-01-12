@@ -46,14 +46,14 @@ class UserForm(UserCreationForm):
 # выбираю любой текст
 def gettext(request):
     json_data = json.loads(request.body)
-    print ("GETTEXT", request.user.pk, json_data)
+    #print ("GETTEXT", request.user.pk, json_data)
     post = Post.objects.get(pk=json_data["post_id"])
     return JsonResponse({"text":post.text, "id_post":post.id})
 
 
 
 def user_page(request, user_id):
-    print (user_id)
+    #print (user_id)
     posts = list(Post.objects.filter(user_post__id=user_id))
     args = {}
     args['username'] = auth.get_user(request) 
@@ -84,10 +84,10 @@ def registration(request):
     args.update(csrf(request))
     args['username'] = auth.get_user(request)
     args['form'] = UserForm()
-    print (request, request.POST, request.method)
+    #print (request, request.POST, request.method)
     if request.POST:
         newuser_form = UserForm(request.POST)
-        print (newuser_form.is_valid())
+        #print (newuser_form.is_valid())
         error_str = f"<html><body>{newuser_form.errors}</body></html>"
         if newuser_form.is_valid():
             path = str(uuid.uuid4())[:12]
@@ -111,7 +111,7 @@ def login(request):
     args = {}
     args.update(csrf(request))
     args['username'] = auth.get_user(request)
-    print (request, request.POST)
+    #print (request, request.POST)
     if request.POST:
         username = request.POST.get('username','')
         password = request.POST.get('password','')
@@ -161,24 +161,24 @@ def post(request, post):
             return HttpResponse("Больше не существует")        
         T = post_id.text.lower().replace("\n", "")
         #json_data = json.dumps(post_id.pure_data)
-        print (post, request.user.username, post_id.pure_data)#, json_data)
-        print (T)
+        #print (post, request.user.username, post_id.pure_data)#, json_data)
+        #print (T)
         div_temp = f"<div id='full_nameuser'>{post_id.user_post.username}</div><div id='full_text'>{T}</div><br><table><tbody>"       
         np_zeros = np.zeros((len(combination), 2)) 
         for ih, h in enumerate(combination):
             idx = indices(T, h)
             if idx != []:
-                print (f"INDICES -> {h} <-------------------", idx)
+                #print (f"INDICES -> {h} <-------------------", idx)
                 temp_ls = []
                 for k in idx:
                     temp_ls.append(post_id.pure_data[k+1]["time_keydown"]-post_id.pure_data[k]["time_keyup"])
-                    print (post_id.pure_data[k+1]["time_keydown"]-post_id.pure_data[k]["time_keyup"])
+                    #print (post_id.pure_data[k+1]["time_keydown"]-post_id.pure_data[k]["time_keyup"])
                     #print (post_id.pure_data[k+1])
                 np_zeros[ih, 0] = np.median(np.array(temp_ls))
                 np_zeros[ih, 1] = T.count(h)
                 
                 div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
-                print ("MDEIANA", np.median(np.array(temp_ls)))
+                #print ("MDEIANA", np.median(np.array(temp_ls)))
         div_temp += "</tbody></table>"
         return HttpResponse(div_temp)
         

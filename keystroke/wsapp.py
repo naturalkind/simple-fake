@@ -249,100 +249,104 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                 из clickhouse делаю загрузку данных
                 для дальнейшего анализа
                 """
-                if response["test"] != True:
-                    post = Post()
-                    post.pure_data = response["KEYPRESS"]
-                    post.text = response["text"]
-                    post.user_post = self.sender_name
-                    post_async = sync_to_async(post.save)
-                    await post_async()    
-    #                now = datetime.datetime.now().strftime('%H:%M:%S')
-                    #---------------------------------------->
-                    
-#                    T = response["text"]
-#                    div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
-#                    np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
-#                    for ih, h in enumerate(combination):
-#                        idx = indices(T, h)
-#                        if idx != []:
-#    #                        print (f"INDICES -> {h} <-------------------", idx)
-#                            temp_ls = []
-#                            for k in idx:
-#                                temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
-#                            np_zeros[ih, 0] = np.median(np.array(temp_ls))
-#                            np_zeros[ih, 1] = T.count(h)
-#                            div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
-#    #                        print ("MDEIANA", np.median(np.array(temp_ls)))
-#                    div_temp += "</tbody></table>"                
-#                    #---------------------------------------->
-#                    now = datetime.datetime.now().strftime('%H:%M:%S')
-#                    _data={
-#                            "type": "wallpost",
-#                            "comment_text": response["text"],
-#                            "post_id": post.id,
-#                            "user_id": self.sender_id,
-#                            "user_post": self.sender_name.username,
-#                            "timecomment":now,
-#                            "status" : "send_test",
-#                            "html": div_temp
-#                        }
-#                    await self.channel_layer.group_send(self.room_group_name, _data)  
+                T = response["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
+                value_pure = ""
+                for op in response["KEYPRESS"]:
+                    #print (op)
+                    value_pure += op["key_name"]
+                value_pure = value_pure.lower()
+                print (value_pure == T)
+                if value_pure == T:
+                    if response["test"] != True:
+                        post = Post()
+                        post.pure_data = response["KEYPRESS"]
+                        post.text = T
+                        post.user_post = self.sender_name
+                        post_async = sync_to_async(post.save)
+                        await post_async()    
+                        #---------------------------------------->
+                        
+                        div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
+                        np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
+                        #print ("............", T, response["KEYPRESS"])
 
-                else:
-                    post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
-                    T0 = post.text.lower().replace("\n", "")
-                    T1 = response["text"].lower().replace("\n", "")
-                    
-#                    dt0 = gen_pd(T0, post.pure_data)
-#                    dt1 = gen_pd(T1, response["KEYPRESS"])
-                    dt0 = time_pair(post.pure_data)
-                    dt1 = time_pair(response["KEYPRESS"])
-                    
-                    print (T0)
-                    print (T1)
-                    test_list=[]
-                    # повторим этот эксперимент несколько раз
-                    #print (len(dt1['pair'].values.tolist()), len(set(dt1['pair'].values.tolist()))) 
-                    for pair_b in set(dt1['pair'].values.tolist()):
-                        series_1=dt0[dt0['pair'] == pair_b]['time']#.values
-                        series_2=dt1[dt1['pair'] == pair_b]['time']#.values
-                        print (pair_b, len(series_1), len(series_2))
-                        if len(series_1) > 3 and len(series_2) > 3:
-                            test_list_key = def_boot(series_1.astype("float"), 
-                                                     series_2.astype("float"),
-                                                     pair_b,
-                                                     test_list)                      
-                    data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
-                    data_rez = data_rez[data_rez['p-value'].notna()]
-#                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
-                    #print (data_rez['p-value'].values.tolist())#to_numpy()
-                    #print (data_rez['pair'].values.tolist())
-                    
-                    A1 = data_rez['pair'].values.tolist() 
-                    B1 = data_rez['p-value'].values.tolist()
-                    
-                    div_temp = f"<table><tbody>" 
-                    for io, o in enumerate(A1):
-                        div_temp += f"<tr><td>{o}</td><td>{B1[io]}</td></tr>"
-                    div_temp += "</tbody></table>"                     
-                    """
-                    print (dt1)    
-                    booted_data = get_bootstrap(dt0["time"].astype("float"), 
-                                                dt1["time"].astype("float"), # числовые значения второй выборки
-                                                boot_it = 1000, # количество бутстрэп-подвыборок
-                                                statistic = np.median, # интересующая нас статистика
-                                                bootstrap_conf_level = 0.95 # уровень значимости
-                                                ) 
-                    print (booted_data['boot_data'])                   
-                    print (booted_data['p_value']) 
-                    """
-                    _data={
-                            "type": "wallpost",
-                            "status" : "send_test_p",
-                            "html": div_temp
-                        }
-                    await self.channel_layer.group_send(self.room_group_name, _data)                     
-                    
+                        for ih, h in enumerate(combination):
+                            idx = indices(T, h)
+                            if idx != []:
+                                #print (f"INDICES -> {h} <-------------------", idx)
+                                temp_ls = []
+                                for k in idx:
+                                    temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
+                                np_zeros[ih, 0] = np.median(np.array(temp_ls))
+                                np_zeros[ih, 1] = T.count(h)
+                                div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
+        #                        print ("MDEIANA", np.median(np.array(temp_ls)))
+                        div_temp += "</tbody></table>"                
+                        #---------------------------------------->
+                        now = datetime.datetime.now().strftime('%H:%M:%S')
+                        _data={
+                                "type": "wallpost",
+                                "comment_text": T,
+                                "post_id": post.id,
+                                "user_id": self.sender_id,
+                                "user_post": self.sender_name.username,
+                                "timecomment":now,
+                                "status" : "send_test",
+                                "html": div_temp
+                            }
+                        await self.channel_layer.group_send(self.room_group_name, _data)  
+                    else:
+                        post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
+                        T0 = post.text.lower().replace("\n", "")
+    #                    dt0 = gen_pd(T0, post.pure_data)
+    #                    dt1 = gen_pd(T1, response["KEYPRESS"])
+                        dt0 = time_pair(post.pure_data)
+                        dt1 = time_pair(response["KEYPRESS"])
+                        
+                        #print (T0)
+                        #print (T)
+                        test_list=[]
+                        # повторим этот эксперимент несколько раз
+                        #print (len(dt1['pair'].values.tolist()), len(set(dt1['pair'].values.tolist()))) 
+                        for pair_b in set(dt1['pair'].values.tolist()):
+                            series_1=dt0[dt0['pair'] == pair_b]['time']#.values
+                            series_2=dt1[dt1['pair'] == pair_b]['time']#.values
+                            print (pair_b, len(series_1), len(series_2))
+                            if len(series_1) > 3 and len(series_2) > 3:
+                                test_list_key = def_boot(series_1.astype("float"), 
+                                                         series_2.astype("float"),
+                                                         pair_b,
+                                                         test_list)                      
+                        data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
+                        data_rez = data_rez[data_rez['p-value'].notna()]
+    #                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
+                        #print (data_rez['p-value'].values.tolist())#to_numpy()
+                        #print (data_rez['pair'].values.tolist())
+                        
+                        A1 = data_rez['pair'].values.tolist() 
+                        B1 = data_rez['p-value'].values.tolist()
+                        
+                        div_temp = f"<table><tbody>" 
+                        for io, o in enumerate(A1):
+                            div_temp += f"<tr><td>{o}</td><td>{B1[io]}</td></tr>"
+                        div_temp += "</tbody></table>"                     
+                        """
+                        print (dt1)    
+                        booted_data = get_bootstrap(dt0["time"].astype("float"), 
+                                                    dt1["time"].astype("float"), # числовые значения второй выборки
+                                                    boot_it = 1000, # количество бутстрэп-подвыборок
+                                                    statistic = np.median, # интересующая нас статистика
+                                                    bootstrap_conf_level = 0.95 # уровень значимости
+                                                    ) 
+                        print (booted_data['boot_data'])                   
+                        print (booted_data['p_value']) 
+                        """
+                        _data={
+                                "type": "wallpost",
+                                "status" : "send_test_p",
+                                "html": div_temp
+                            }
+                        await self.channel_layer.group_send(self.room_group_name, _data) 
 
     async def wallpost(self, res):
         """ Receive message from room group """
