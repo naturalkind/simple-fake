@@ -258,34 +258,36 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     await post_async()    
     #                now = datetime.datetime.now().strftime('%H:%M:%S')
                     #---------------------------------------->
-                    T = response["text"]
-                    div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
-                    np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
-                    for ih, h in enumerate(combination):
-                        idx = indices(T, h)
-                        if idx != []:
-    #                        print (f"INDICES -> {h} <-------------------", idx)
-                            temp_ls = []
-                            for k in idx:
-                                temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
-                            np_zeros[ih, 0] = np.median(np.array(temp_ls))
-                            np_zeros[ih, 1] = T.count(h)
-                            div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
-    #                        print ("MDEIANA", np.median(np.array(temp_ls)))
-                    div_temp += "</tbody></table>"                
-                    #---------------------------------------->
-                    now = datetime.datetime.now().strftime('%H:%M:%S')
-                    _data={
-                            "type": "wallpost",
-                            "comment_text": response["text"],
-                            "post_id": post.id,
-                            "user_id": self.sender_id,
-                            "user_post": self.sender_name.username,
-                            "timecomment":now,
-                            "status" : "send_test",
-                            "html": div_temp
-                        }
-                    await self.channel_layer.group_send(self.room_group_name, _data)  
+                    
+#                    T = response["text"]
+#                    div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
+#                    np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
+#                    for ih, h in enumerate(combination):
+#                        idx = indices(T, h)
+#                        if idx != []:
+#    #                        print (f"INDICES -> {h} <-------------------", idx)
+#                            temp_ls = []
+#                            for k in idx:
+#                                temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
+#                            np_zeros[ih, 0] = np.median(np.array(temp_ls))
+#                            np_zeros[ih, 1] = T.count(h)
+#                            div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
+#    #                        print ("MDEIANA", np.median(np.array(temp_ls)))
+#                    div_temp += "</tbody></table>"                
+#                    #---------------------------------------->
+#                    now = datetime.datetime.now().strftime('%H:%M:%S')
+#                    _data={
+#                            "type": "wallpost",
+#                            "comment_text": response["text"],
+#                            "post_id": post.id,
+#                            "user_id": self.sender_id,
+#                            "user_post": self.sender_name.username,
+#                            "timecomment":now,
+#                            "status" : "send_test",
+#                            "html": div_temp
+#                        }
+#                    await self.channel_layer.group_send(self.room_group_name, _data)  
+
                 else:
                     post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
                     T0 = post.text.lower().replace("\n", "")

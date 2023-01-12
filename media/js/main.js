@@ -12,6 +12,8 @@ idk_block.innerHTML = `<button type="button"
                                indicator="close">SEE ALL DATAS</button>
                        <div id="block_post"></div>
                        <br>
+                       <p>Elapsed time: <span id="time">0</span>s</p>
+                       <br>
                        <h3>Number of characters <span id="count_text">0</span>. Enter message:</h3>
                        <br>
                        <div id="show_value"></div>
@@ -54,22 +56,106 @@ var idx_arr = 0;
 text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = text_input.onclick = handle;
 //text_input.textContent
 
+// https://stackoverflow.com/questions/8105824/determine-the-position-index-of-a-character-within-an-html-element-when-clicked
 function getSelectionPosition () {
   var selection = window.getSelection();
   idx_arr = selection.focusOffset
 }
 
+//--------------------------->
+var start_all_time;
+var end_all_time;
+var focusHandler = function() {
+    console.log("Focus");
+    timer.start();
+    start_all_time = new Date().getTime()/1000.0;
+}
+var blurHandler = function() {
+    console.log("Focus End");
+    end_all_time = new Date().getTime()/1000.0;
+}
+
+text_input.onfocus = focusHandler;
+text_input.onblur = blurHandler;
+
+
+class Timer {
+  constructor () {
+    this.isRunning = false;
+    this.startTime = 0;
+    this.overallTime = 0;
+  }
+
+  _getTimeElapsedSinceLastStart () {
+    if (!this.startTime) {
+      return 0;
+    }
+  
+    return Date.now() - this.startTime;
+  }
+
+  start () {
+    if (this.isRunning) {
+      return console.error('Timer is already running');
+    }
+
+    this.isRunning = true;
+
+    this.startTime = Date.now();
+  }
+
+  stop () {
+    if (!this.isRunning) {
+      return console.error('Timer is already stopped');
+    }
+
+    this.isRunning = false;
+
+    this.overallTime = this.overallTime + this._getTimeElapsedSinceLastStart();
+  }
+
+  reset () {
+    this.overallTime = 0;
+
+    if (this.isRunning) {
+      this.startTime = Date.now();
+      return;
+    }
+
+    this.startTime = 0;
+  }
+
+  getTime () {
+    if (!this.startTime) {
+      return 0;
+    }
+
+    if (this.isRunning) {
+      return this.overallTime + this._getTimeElapsedSinceLastStart();
+    }
+
+    return this.overallTime;
+  }
+}
+
+const timer = new Timer();
+
+setInterval(() => {
+  const timeInSeconds = Math.round(timer.getTime() / 1000);
+  document.getElementById('time').innerText = timeInSeconds;
+}, 100)
+
+//--------------------------->
 
 function handle(e) {
     if (e.type == "click") {
-        //var length = text_input.innerHTML;
         getSelectionPosition ();
-        //console.log("WALL KEYPRESS", e, e.type, e.anchorOffset);
+        console.log("WALL KEYPRESS", e, e.type, e.anchorOffset);
     }
     if (list_exept.indexOf(e.key) == -1) {
         if (e.type == "keydown") {
             if (e.key=="Backspace") {
-                if (arr.length!=0) {
+                if (arr.length!=0 && idx_arr>0 ) {
                     idx_arr--; 
                     arr.splice(idx_arr, 1);
                     count_text.innerHTML = arr.length;  
@@ -113,105 +199,13 @@ function handle(e) {
             for (var i = 0; i < arr.length; i++) {
                 value_pure += arr[i].key_name;
             }
-            show_value.innerHTML =`<div class="value_pure">${text_input.innerText}</div>`;
+            show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`;
+//            show_value.innerHTML =`<div class="value_pure">${text_input.innerText}</div>`;
             count_text.innerHTML = arr.length; 
             //console.log(text_input.innerText, "<---->", value_pure, text_input.innerText.trim() === value_pure.trim());
         }
     }
 }
-
-
-//var keyTimes = {};
-//var arr = [];
-//var value_pure = "";
-//var idx_arr = 0;
-//function handle(e) {
-//    if (e.type == "click") {
-//        console.log("WALL KEYPRESS", e, e.type, keyTimes);
-//    }
-//    
-//    if (e.type == "keydown") {
-//        if (!keyTimes["key" + e.which]) {
-//            keyTimes["key" + e.which] = new Date().getTime();
-//        } else {
-//            if (e.key == "CapsLock" || e.key == "Alt" || e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift" || e.key=="ArrowLeft" || e.key=="ArrowRight") {
-//            
-//            } else if (e.key!="Backspace") {
-//                var _data = {"time_keydown": keyTimes["key" + e.which],
-//                                             "key_name":e.key, 
-//                                             "key_code":e.keyCode}           
-//                arr.push(_data);
-//                idx_arr++;
-//                
-//                var value_pure = '';
-//                var value_time = '';
-//                for (var i = 0; i < arr.length; i++) {
-//                    value_pure += arr[i].key_name;
-//                    value_time += arr[i].time_press;
-//                }
-//                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
-//                                      `; //<div class="value_time">${value_time}</div>
-//            }
-//        }
-//        if (e.key=="Backspace") {
-//            if (arr.length!=0 && idx_arr>0) {
-//                idx_arr--;
-//                arr.splice(idx_arr, 1); 
-//                count_text.innerHTML = arr.length;  
-//            }
-//            //-------------------------->
-//            var value_pure = '';
-//            for (var i = 0; i < arr.length; i++) {
-//                value_pure += arr[i].key_name;
-//            }
-//            show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`            
-//        } else if (e.key=="ArrowLeft") {
-//            if (idx_arr > 0) {
-//                idx_arr--;
-//            }
-//        } else if (e.key=="ArrowRight") { 
-//            if (arr.length>idx_arr) {
-//                idx_arr++;
-//            }         
-//        } 
-//    } 
-//    if (e.type == "keyup") {
-//        if (keyTimes["key" + e.which]) {
-//            if (e.key=="ArrowLeft") {
-//            } else if (e.key=="ArrowRight") { 
-//            
-//            } else if (e.key=="Backspace" || e.key == "CapsLock" || e.key == "Alt") { 
-//            } else if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Control" || e.key == "Shift") {
-//                                   
-//            } else {
-//                var time_up = new Date().getTime()
-//                var x = time_up - keyTimes["key" + e.which];
-//                //keyTimes["key" + e.which] = {"time_press":x / 1000.0, "key_name":e.key, "key_code":e.keyCode}
-//                var _data = {"time_keydown": keyTimes["key" + e.which] / 1000.0,
-//                             "time_press":x / 1000.0, 
-//                             "key_name":e.key, 
-//                             "key_code":e.keyCode, 
-//                             "time_keyup":time_up/1000.0}
-//                //arr.push(_data);
-//                arr.splice(idx_arr, 0, _data);
-//                delete keyTimes["key" + e.which];
-////                console.log("KEYUP", e.key, x / 1000.0, idx_arr, arr.length);
-//                //------------->
-//                var value_pure = '';
-//                var value_time = '';
-//                for (var i = 0; i < arr.length; i++) {
-//                    value_pure += arr[i].key_name;
-//                    value_time += arr[i].time_press;
-//                }
-//                show_value.innerHTML =`<div class="value_pure">${value_pure}</div>
-//                                      `; //<div class="value_time">${value_time}</div>
-//                //------------>     
-//                idx_arr++;
-//                count_text.innerHTML = arr.length; 
-//            }
-//        } 
-//    }
-//}
 
 function recording_key() {
     console.log('tick', arr)
@@ -223,32 +217,41 @@ function recording_key() {
 
 
 function send_test(self) {
-    var value_pure = '';
-    for (var i = 0; i < arr.length; i++) {
-        value_pure += arr[i].key_name;
-    } 
-    //console.log(value_pure, text_input.innerText, value_pure == text_input.innerText)
+    if (arr.length == text_input.innerText.length) {
+        var value_pure = "";
+        for (var i = 0; i < arr.length; i++) {
+            value_pure += arr[i].key_name;
+        }
+        if (text_input.innerText.trim() === value_pure.trim()) {
+            timer.stop();
+            timer.reset();
+            console.log(text_input.innerText, "<---->", value_pure, text_input.innerText.trim() === value_pure.trim(), end_all_time-start_all_time);
+            try {
+                document.getElementById("test_user").checkedж
+                ws.send(JSON.stringify({'event': 'send_test', 
+                                        'KEYPRESS': arr,
+                                        'text':text_input.innerText,
+                                        'id_post': temp_id,
+                                        'test':document.getElementById("test_user").checked}));    
+            } catch(e) {
+                ws.send(JSON.stringify({'event': 'send_test', 
+                                        'KEYPRESS': arr,
+                                        'text':text_input.innerText,
+                                        'test': false}));  
+            
+            }
+         
+            text_input.innerText = "";
+            arr.length = 0;
+            count_text.innerHTML = 0;
+            show_value.innerHTML = "";
+            keyTimes = {}            
+            
+            
+        }
+    }
           
-//    try {
-//        document.getElementById("test_user").checkedж
-//        ws.send(JSON.stringify({'event': 'send_test', 
-//                                'KEYPRESS': arr,
-//                                'text':value_pure,
-//                                'id_post': temp_id,
-//                                'test':document.getElementById("test_user").checked}));    
-//    } catch(e) {
-//        ws.send(JSON.stringify({'event': 'send_test', 
-//                                'KEYPRESS': arr,
-//                                'text':value_pure,
-//                                'test': false}));  
-//    
-//    }
-// 
-//    text_input.innerText = "";
-//    arr.length = 0;
-//    count_text.innerHTML = 0;
-//    show_value.innerHTML = "";
-//    keyTimes = {}
+
 }
 
 
