@@ -22,7 +22,7 @@ from scipy.stats import mannwhitneyu
 from scipy.stats import ttest_ind
 from scipy.stats import norm
 from tqdm.auto import tqdm
-from sklearn.metrics.pairwise import cosine_similarity,cosine_distances
+
 
 ## clickhouse
 #from clickhouse_driver import Client as ClientClickhouse
@@ -56,6 +56,67 @@ from sklearn.metrics.pairwise import cosine_similarity,cosine_distances
 #clickhouse_db.delete(clickhouse_table_name)
 #clickhouse_db.createDB(clickhouse_table_name)
 
+
+def get_bootstrap(data_column_1, # числовые значения первой выборки
+                  data_column_2, # числовые значения второй выборки
+                  boot_it = 1000, # количество бутстрэп-подвыборок
+                  statistic = np.mean, # интересующая нас статистика
+                  bootstrap_conf_level = 0.95 # уровень значимости
+                  ):
+    #print(data_column_1, data_column_2)
+    boot_len = max([len(data_column_1), len(data_column_2)])
+    #print(boot_len)
+    boot_data = []
+    for i in tqdm(range(boot_it)): # извлекаем подвыборки
+        samples_1 = data_column_1.sample(
+            boot_len, 
+            replace = True # параметр возвращения
+        ).values
+        samples_2 = data_column_2.sample(
+            boot_len, # чтобы сохранить дисперсию, берем такой же размер выборки
+            replace = True
+        ).values
+
+#        print(samples_1, len(samples_1), boot_len)
+#        print(samples_2, len(samples_2), boot_len)
+                
+        boot_data.append(statistic(samples_1-samples_2)) 
+    pd_boot_data = pd.DataFrame(boot_data)
+        
+    left_quant = (1 - bootstrap_conf_level)/2
+    right_quant = 1 - (1 - bootstrap_conf_level) / 2
+    quants = pd_boot_data.quantile([left_quant, right_quant])
+        
+    p_1 = norm.cdf(
+        x = 0, 
+        loc = np.mean(boot_data), 
+        scale = np.std(boot_data)
+    )
+    p_2 = norm.cdf(
+        x = 0, 
+        loc = -np.mean(boot_data), 
+        scale = np.std(boot_data)
+    )
+    p_value = min(p_1, p_2) * 2
+
+    return {"boot_data": boot_data, 
+            "quants": quants, 
+            "p_value": p_value}
+
+def def_boot(series_1, series_2, pair_b, test_list_all):
+    test_list=[]
+    booted_data = get_bootstrap(series_1, 
+                                series_2, # числовые значения второй выборки
+                                boot_it = 1000, # количество бутстрэп-подвыборок
+                                statistic = np.median, # интересующая нас статистика
+                                bootstrap_conf_level = 0.95 # уровень значимости
+                                )
+    test_list.append(pair_b)
+    test_list.append(booted_data["p_value"])
+    test_list_all.append(test_list)
+    print(pair_b, 'p_value=', booted_data["p_value"])
+    return test_list_all
+
 def time_pair(JS):
     time_a=[]
     for i in range(len(JS)-1):
@@ -72,111 +133,6 @@ def time_pair(JS):
         time_a.append(time_JS)
     dataset = pd.DataFrame(time_a, columns=['pair', 'time'])
     return dataset
-    
-#def time_pair(JS,id,user):
-#  time_a=[]
-#  for i in range(len(JS)-1):
-#    time_JS=[]
-#    pair=JS[i]['key_name']+JS[i+1]['key_name']
-#    t11= JS[i]['time_keydown']
-#    t12= JS[i]['time_keyup']
-#    t1=t12-t11
-#    t21= JS[i+1]['time_keydown']
-#    t22= JS[i+1]['time_keyup']
-#    t2=t22-t21
-#    time_JS.append(id)
-#    time_JS.append(user)
-#    time_JS.append(t1+t2)      
-#    time_JS.append(t21-t12)    
-#    time_JS.append(pair)
-#    time_a.append(time_JS)
-#  return time_a
-
-#----------------------------------------------------->
-
-
-
-#get_bootstrap
-def get_bootstrap_cos(data_1, # числовые значения первой выборки
-                      data_2, # числовые значения второй выборки
-                      boot_it = 1000, # количество бутстрэп-подвыборок
-                      statistic = np.mean, # интересующая нас статистика
-                      bootstrap_conf_level = 0.95, # уровень значимости
-                      pair_all=['а ']):
-    #print(data_column_1, data_column_2)
-    boot_len = 1  #max([len(data_column_1), len(data_column_2)])
-    #boot_it=1000
-    boot_data = []
-    for i in tqdm(range(boot_it)): # извлекаем подвыборки
-        samples_1=[]
-        samples_2=[]
-        cos_val=[[1]]
-        for pair_b in pair_all:
-            data_column_1 = data_1[data_1['pair']==pair_b]['time']#.values[0]#.astype("float")
-            data_column_2 = data_2[data_2['pair']==pair_b]['time']#.values[0] #.astype("float").values
-            val_1 = data_column_1.values[0]
-            val_2 = data_column_2.values[0]
-            
-            if len(data_column_1)>2 and len(data_column_2)>2:
-                val_1 =(np.random.choice(data_column_1, size=1, replace=True))
-                val_2 =(np.random.choice(data_column_2, size=1, replace=True))
-                #print("TWO--->", val_1, val_2)
-                #time.sleep(2)
-                samples_1.append(val_1[0])   
-                samples_2.append(val_2[0])
-        #print(samples_1)
-        if len(samples_1)>2 and len(samples_2)>2:
-            A=np.array(samples_1)
-            B=np.array(samples_2)        
-#            print(A)
-#            print(B)                  
-            cos_val=cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
-            #print('cos=',cos_val[0][0])
-            boot_data.append((cos_val[0][0]))
-    pd_boot_data = pd.DataFrame(boot_data)
-    left_quant = (1 - bootstrap_conf_level)/2
-    right_quant = 1 - (1 - bootstrap_conf_level) / 2
-    quants = pd_boot_data.quantile([left_quant, right_quant])
-        
-    p_1 = norm.cdf(
-        x = 0, 
-        loc = np.mean(boot_data), 
-        scale = np.std(boot_data)
-    )
-    p_2 = norm.cdf(
-        x = 0, 
-        loc = -np.mean(boot_data), 
-        scale = np.std(boot_data)
-    )
-    p_value = min(p_1, p_2) * 2
-       
-    return {"boot_data": boot_data, 
-             "quants": quants, 
-             "p_value": p_value}
-#def def_boot
-def def_boot_cos(data_1, data_2, pair_all, test_list_all):
-    #print(id_1, id_2, pair_b)      
-    test_list=[]
-    booted_data=get_bootstrap_cos(data_1, 
-                                  data_2, # числовые значения второй выборки
-                                  boot_it = 1000, # количество бутстрэп-подвыборок
-                                  statistic = np.median, # интересующая нас статистика
-                                  bootstrap_conf_level = 0.95, # уровень значимости
-                                  pair_all=pair_all
-                                  )
-    test_list.append(len(pair_all))
-    test_list.append(booted_data["p_value"])
-    test_list.append(np.median(booted_data["boot_data"]))
-    
-    test_list_all.append(test_list)
-#    print('p_value=',booted_data["p_value"])
-#    print('median_cos=',np.median(booted_data["boot_data"]))
-#    print('Количество общих пар', len(pair_all))  
-    return test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"]), len(pair_all)
-
-
-#------------------------------------------------------>
-
 
 
 combination = ["ст", "то", "но", "на", "по", "ен", "ни", "не", "ко", "ра", "ов", "ро", "го", "ал",
@@ -346,24 +302,45 @@ class B_Handler(AsyncJsonWebsocketConsumer):
     #                    dt1 = gen_pd(T1, response["KEYPRESS"])
                         dt0 = time_pair(post.pure_data)
                         dt1 = time_pair(response["KEYPRESS"])
-                        #'pair', 'time'
-                        #--------------->
                         
-                        p1 = set(dt0['pair'].values)    
-                        p2 = set(dt1['pair'].values)
-                        pair_all = list(p1 & p2)
-                        print ("ONE----->", pair_all)
-                        test_list = []
-                        test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
-                        #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
+                        #print (T0)
+                        #print (T)
+                        test_list=[]
+                        # повторим этот эксперимент несколько раз
+                        #print (len(dt1['pair'].values.tolist()), len(set(dt1['pair'].values.tolist()))) 
+                        for pair_b in set(dt1['pair'].values.tolist()):
+                            series_1=dt0[dt0['pair'] == pair_b]['time']#.values
+                            series_2=dt1[dt1['pair'] == pair_b]['time']#.values
+                            print (pair_b, len(series_1), len(series_2))
+                            if len(series_1) > 3 and len(series_2) > 3:
+                                test_list_key = def_boot(series_1.astype("float"), 
+                                                         series_2.astype("float"),
+                                                         pair_b,
+                                                         test_list)                      
+                        data_rez = pd.DataFrame(test_list, columns=['pair','p-value'])
+                        data_rez = data_rez[data_rez['p-value'].notna()]
+    #                    data_rez['p-value'] = data_rez['p-value'].apply(sigmoid)
+                        #print (data_rez['p-value'].values.tolist())#to_numpy()
+                        #print (data_rez['pair'].values.tolist())
                         
-                        print (test_list)
-
-                        t_S = "" 
-                        for io, o in enumerate(test_list[0]):
-                            t_S += f"{o}, "
-                        div_temp = f"[{t_S}], p_value = {p_value}, median_cos = {med_cos}, Количество общих пар: {len_pair}"                            
-                        #---------------->
+                        A1 = data_rez['pair'].values.tolist() 
+                        B1 = data_rez['p-value'].values.tolist()
+                        
+                        div_temp = f"<table><tbody>" 
+                        for io, o in enumerate(A1):
+                            div_temp += f"<tr><td>{o}</td><td>{B1[io]}</td></tr>"
+                        div_temp += "</tbody></table>"                     
+                        """
+                        print (dt1)    
+                        booted_data = get_bootstrap(dt0["time"].astype("float"), 
+                                                    dt1["time"].astype("float"), # числовые значения второй выборки
+                                                    boot_it = 1000, # количество бутстрэп-подвыборок
+                                                    statistic = np.median, # интересующая нас статистика
+                                                    bootstrap_conf_level = 0.95 # уровень значимости
+                                                    ) 
+                        print (booted_data['boot_data'])                   
+                        print (booted_data['p_value']) 
+                        """
                         _data={
                                 "type": "wallpost",
                                 "status" : "send_test_p",

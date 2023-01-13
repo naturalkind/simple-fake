@@ -612,6 +612,13 @@ function send_for_reg(self) {
         }
         let data = JSON.stringify({'KEYPRESS': arr,
                                    'text':text_input.innerText});
+//        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+//        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+//        console.log(S, S1, S===S1);
+//        console.log(text_input.innerHTML, document.getElementById("block_post").innerHTML);  
+//        console.log(text_input.innerText.normalize().length, text_input.innerText.length);                          
+//        console.log(text_input.innerText===document.getElementById("block_post").innerText)                           
+                                   
         http.send(data);  
     }
 }
