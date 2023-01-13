@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', keystroke.mainpage),
     path(r'registration/', keystroke.registration),
+    path(r'registrationend/', keystroke.registrationend),
     path(r'login/', keystroke.login),
     path(r'keystroke/', keystroke.keystroke),
     re_path(r'^data/(?P<post>\d+)/$', keystroke.post), # страница материала

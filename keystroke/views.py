@@ -89,23 +89,59 @@ def registration(request):
         newuser_form = UserForm(request.POST)
         #print (newuser_form.is_valid())
         error_str = f"<html><body>{newuser_form.errors}</body></html>"
+        print ("REGISTER", request.POST)
         if newuser_form.is_valid():
-            path = str(uuid.uuid4())[:12]
-            if not os.path.exists(f"media/data_image/{path}"):
-                os.makedirs(f"media/data_image/{path}")
-            
-            new_author = newuser_form.save(commit=False)
-            new_author.path_data = path
-            
-            new_author.save()
-            newuser = auth.authenticate(username=newuser_form.cleaned_data['username'],
-                                        password=newuser_form.cleaned_data['password2'],
-                                        )
-            auth.login(request, newuser)
-            return redirect('/')
+#            path = str(uuid.uuid4())[:12]
+#            if not os.path.exists(f"media/data_image/{path}"):
+#                os.makedirs(f"media/data_image/{path}")
+#            
+#            new_author = newuser_form.save(commit=False)
+#            new_author.path_data = path
+#            
+#            new_author.save()
+#            newuser = auth.authenticate(username=newuser_form.cleaned_data['username'],
+#                                        password=newuser_form.cleaned_data['password2'],
+#                                        )
+#            auth.login(request, newuser)
+#            return redirect('/registrationend')
+            request.session['registration'] = request.POST
+            return HttpResponseRedirect('/registrationend')
         else:
             args['form'] = newuser_form
     return render(request, 'registration.html', args)
+
+def registrationend(request):
+    registration = request.session.get('registration')
+    try:
+        json_data = json.loads(request.body)
+        if registration:
+            newuser_form = UserForm(registration)
+            if newuser_form.is_valid():
+                path = str(uuid.uuid4())[:12]
+                
+                if not os.path.exists(f"media/data_image/{path}"):
+                    os.makedirs(f"media/data_image/{path}")
+                
+                new_author = newuser_form.save(commit=False)
+                new_author.path_data = path
+                
+                new_author.save()
+                newuser = auth.authenticate(username=newuser_form.cleaned_data['username'],
+                                            password=newuser_form.cleaned_data['password2'],
+                                            )
+                auth.login(request, newuser)
+                
+                T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
+                post = Post()
+                post.pure_data = json_data["KEYPRESS"]
+                post.text = T
+                post.user_post = newuser
+                post.save()
+                #return redirect('/')
+                #print ("REGISTEREND", request.POST, registration, json_data)
+    except:
+        pass
+    return render(request, 'createpost.html', registration)
 
 def login(request):
     args = {}
@@ -161,7 +197,7 @@ def post(request, post):
             return HttpResponse("Больше не существует")        
         T = post_id.text.lower().replace("\n", "")
         #json_data = json.dumps(post_id.pure_data)
-        #print (post, request.user.username, post_id.pure_data)#, json_data)
+        print (post, request.user.username, post_id.pure_data)#, json_data)
         #print (T)
         div_temp = f"<div id='full_nameuser'>{post_id.user_post.username}</div><div id='full_text'>{T}</div><br><table><tbody>"       
         np_zeros = np.zeros((len(combination), 2)) 
@@ -172,11 +208,8 @@ def post(request, post):
                 temp_ls = []
                 for k in idx:
                     temp_ls.append(post_id.pure_data[k+1]["time_keydown"]-post_id.pure_data[k]["time_keyup"])
-                    #print (post_id.pure_data[k+1]["time_keydown"]-post_id.pure_data[k]["time_keyup"])
-                    #print (post_id.pure_data[k+1])
                 np_zeros[ih, 0] = np.median(np.array(temp_ls))
                 np_zeros[ih, 1] = T.count(h)
-                
                 div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
                 #print ("MDEIANA", np.median(np.array(temp_ls)))
         div_temp += "</tbody></table>"

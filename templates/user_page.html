@@ -2,7 +2,7 @@
 <div id="user_page">
     <h3>СТРАНИЦА ПОЛЬЗОВАТЕЛЯ </h3>
     {% for post in posts %}
-        <button type="button" onclick="see_data(this)" indicator="send" post_id="27">
+        <button type="button" onclick="see_data(this)" indicator="send" post_id="{{post.id}}">
             Посмотреть статисику поста #{{post.id}}, пользователя {{post.user_post.username}}
         </button>
     {% endfor %}    

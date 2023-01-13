@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div id="block_post"></div>
+<br>
+<p>Elapsed time: <span id="time">0</span>s</p>
+<p>Number of characters: <span id="count_text">0</span></p>
+<h3>Enter message:</h3>
+<br>
+<div id="show_value"></div>
+<br> 
+<div id="text_input" class="message_textarea" 
+                    role="textbox" 
+                    contenteditable="true" aria-multiline="true" aria-required="true" 
+                    style="background: white;font-size: 26px;margin: 9px auto;"></div>
+<button type="button" onclick="send_for_reg(this)" 
+                     indicator="send" 
+                     class="Button"
+                     style="margin: 4px auto; display: block;">SEND</button>
+{% endblock content  %}

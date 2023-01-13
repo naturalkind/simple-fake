@@ -152,12 +152,12 @@ function handle(e) {
                 if (arr.length!=0 && idx_arr>0 ) {
                     idx_arr--;
                     arr.splice(idx_arr, 1);
-                    count_text.innerHTML = arr.length;  
+                    document.getElementById("count_text").innerHTML = arr.length;  
                     let value_pure = '';
                     for (var i = 0; i < arr.length; i++) {
                         value_pure += arr[i].key_name;
                     }
-                    show_value.innerHTML = value_pure;
+                    document.getElementById("show_value").innerHTML = value_pure;
                 }
                  
                 //`<div class="value_pure">${text_input.innerText}</div>`;
@@ -185,11 +185,10 @@ function handle(e) {
                     tKey[e.key].push(idx_arr);
                 }
                 //show_value.innerHTML = text_input.innerHTML   
-                show_value.innerHTML += K;
-                count_text.innerHTML = arr.length;                   
+                document.getElementById("show_value").innerHTML += K;
+                document.getElementById("count_text").innerHTML = arr.length;                   
                 idx_arr++  
-
-//                console.log(e.key, list_exept.indexOf(e.key), keyTimes, arr.length, text_input.innerText.length);
+                console.log(e.key, list_exept.indexOf(e.key), keyTimes, arr.length, text_input.innerText.length);
             }
         }
         if (e.type == "keyup") {
@@ -592,4 +591,28 @@ ws.onmessage = function(data) {
     }
         
 };
+
+function send_for_reg(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    let data = JSON.stringify({'KEYPRESS': arr,
+                               'text':text_input.innerText}); 
+    console.log("SEND_FOR_REG", crsv, data);   
+    var http = createRequestObject();
+    var linkfull = '/registrationend/';
+    if (http) {
+        http.open('post', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    window.location.replace("/");
+                }
+            }
+        }
+        let data = JSON.stringify({'KEYPRESS': arr,
+                                   'text':text_input.innerText});
+        http.send(data);  
+    }
+}
 
