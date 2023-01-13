@@ -114,8 +114,8 @@ def get_bootstrap_cos(data_1, # числовые значения первой �
         for pair_b in pair_all:
             data_column_1 = data_1[data_1['pair']==pair_b]['time']#.values[0]#.astype("float")
             data_column_2 = data_2[data_2['pair']==pair_b]['time']#.values[0] #.astype("float").values
-            val_1 = data_column_1.values[0]
-            val_2 = data_column_2.values[0]
+#            val_1 = data_column_1.values[0]
+#            val_2 = data_column_2.values[0]
             
             if len(data_column_1)>2 and len(data_column_2)>2:
                 val_1 =(np.random.choice(data_column_1, size=1, replace=True))
@@ -159,7 +159,7 @@ def def_boot_cos(data_1, data_2, pair_all, test_list_all):
     test_list=[]
     booted_data=get_bootstrap_cos(data_1, 
                                   data_2, # числовые значения второй выборки
-                                  boot_it = 1000, # количество бутстрэп-подвыборок
+                                  boot_it = 100, # количество бутстрэп-подвыборок
                                   statistic = np.median, # интересующая нас статистика
                                   bootstrap_conf_level = 0.95, # уровень значимости
                                   pair_all=pair_all
