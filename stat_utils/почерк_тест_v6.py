@@ -35,7 +35,7 @@ def get_bootstrap_cos(
     pair_all=['а ']):
     #print(data_column_1,data_column_2)
     boot_len = 1  #max([len(data_column_1), len(data_column_2)])
-    print(pair_all)
+#    print(pair_all)
     #boot_it=1000
     boot_data = []
     for i in tqdm(range(boot_it)): # извлекаем подвыборки
@@ -46,54 +46,65 @@ def get_bootstrap_cos(
         data_column_1=data_1[data_1['pair']==pair_b]['between'].values[0]#.astype("float")
         #print(data_column_1)
         data_column_2=data_2[data_2['pair']==pair_b]['between'].values[0] #.astype("float").values
-        val_1=data_column_1[0]
-        val_2=data_column_2[0]        
-        if len(data_column_1)>1 and len(data_column_2)>1:
+        #val_1=data_column_1[0]
+        #val_2=data_column_2[0]        
+        if len(data_column_1)>2 and len(data_column_2)>2:
           val_1 =(np.random.choice(data_column_1, size=1, replace=True))
           val_2 =(np.random.choice(data_column_2, size=1, replace=True))
-          samples_1.append(val_1[0])   
-          samples_2.append(val_2[0])
+          samples_1.append(val_1[0].astype("float"))   
+          samples_2.append(val_2[0].astype("float"))
       #print(samples_1)
       if len(samples_1)>2 and len(samples_2)>2:
         A=np.array(samples_1)
-        B=np.array(samples_2)        
-#        print(A)
-#        print(B)                  
-        cos_val=cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
-        #print('cos=',cos_val[0][0])
-        boot_data.append((cos_val[0][0]))
+        B=np.array(samples_2)
+        A_med=statistic(A)
+        B_med=statistic(B)                
+ #       print(len(A))
+ #       print(len(B)) 
+        C=statistic(np.subtract(A,B))                 
+ #       cos_val=cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
+ #       cos_val=np.sqrt(np.sum(np.square(C))) #cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
+        cos_val=C #A_med-B_med #np.sqrt(np.sum(np.square(C))) #cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
+
+ #       print('cos=',cos_val)        
+ #       print('cos=',cos_val[0][0])
+ #       boot_data.append((cos_val[0][0]))
+        boot_data.append(cos_val)
     pd_boot_data = pd.DataFrame(boot_data)
-    left_quant = (1 - bootstrap_conf_level)/2
-    right_quant = 1 - (1 - bootstrap_conf_level) / 2
-    quants = pd_boot_data.quantile([left_quant, right_quant])
+    p_value=100
+    quants=[0,0]
+    if len(boot_data)>1:
+      left_quant = (1 - bootstrap_conf_level)/2
+      right_quant = 1 - (1 - bootstrap_conf_level) / 2
+      quants = pd_boot_data.quantile([left_quant, right_quant])
         
-    p_1 = norm.cdf(
+      p_1 = norm.cdf(
         x = 0, 
         loc = np.mean(boot_data), 
         scale = np.std(boot_data)
-    )
-    p_2 = norm.cdf(
+      )
+      p_2 = norm.cdf(
         x = 0, 
         loc = -np.mean(boot_data), 
         scale = np.std(boot_data)
-    )
-    p_value = min(p_1, p_2) * 2
+      )
+      p_value = min(p_1, p_2) * 2
         
-    # Визуализация
- # "  _, _, bars = plt.hist(pd_boot_data[0], bins = 50)
- #   for bar in bars:
- #       if abs(bar.get_x()) <= quants.iloc[0][0] or abs(bar.get_x()) >= quants.iloc[1][0]:
- #           bar.set_facecolor('red')
- #       else: 
- #           bar.set_facecolor('grey')
- #           bar.set_edgecolor('black')
- #   
- #   plt.style.use('ggplot')
- #   plt.vlines(quants,ymin=0,ymax=50,linestyle='--')
- #   plt.xlabel('boot_data')
- #   plt.ylabel('frequency')
- #   plt.title("Histogram of boot_data")
- #   plt.show()
+      # Визуализация
+      _, _, bars = plt.hist(pd_boot_data[0], bins = 50)
+      for bar in bars:
+          if abs(bar.get_x()) <= quants.iloc[0][0] or abs(bar.get_x()) >= quants.iloc[1][0]:
+            bar.set_facecolor('red')
+          else: 
+            bar.set_facecolor('grey')
+            bar.set_edgecolor('black')
+    
+      plt.style.use('ggplot')
+      plt.vlines(quants,ymin=0,ymax=50,linestyle='--')
+      plt.xlabel('boot_data')
+      plt.ylabel('frequency')
+      plt.title("Histogram of boot_data")
+      plt.show()
        
     return {"boot_data": boot_data, 
              "quants": quants, 
@@ -167,15 +178,14 @@ def get_bootstrap(
 """## Обращение к базе"""
 
 def open_csv_db():
-#    url = "https://raw.githubusercontent.com/naturalkind/simple-fake/orm_django/ormapp/media/images/out.csv"
-    url ="https://cyber.b24chat.com/media/data_image/out.csv"
+    url = "https://raw.githubusercontent.com/naturalkind/simple-fake/orm_django/ormapp/media/images/out.csv"
+#    url ="https://cyber.b24chat.com/media/data_image/out.csv"
     D = requests.get(url).content
-
     df = pd.read_csv(io.StringIO(D.decode('utf-8')))
     return df
 df=open_csv_db()
 
-df = pd.read_csv('/content/out.csv')#.decode('utf-8')))
+df = pd.read_csv('/content/df.csv')#.decode('utf-8')))
 
 def re_id(x):
   if x==1:
@@ -194,20 +204,24 @@ def def_boot_cos(data_1,data_2,pair_all,id_1,id_2,test_list_all):
   #print(id_1, id_2, pair_b)      
   test_list=[]
   booted_data=get_bootstrap_cos(data_1,data_2, # числовые значения второй выборки
-      boot_it = 1000, # количество бутстрэп-подвыборок
+      boot_it = 50,#1000, # количество бутстрэп-подвыборок
       statistic = np.median, # интересующая нас статистика
       bootstrap_conf_level = 0.95, # уровень значимости
       pair_all=pair_all
       )
+#  if booted_data["p_value"]!=np.median(booted_data["boot_data"]
   test_list.append(id_1)
   test_list.append(id_2)
   test_list.append(len(pair_all))
+
   test_list.append(booted_data["p_value"])
   test_list.append(np.median(booted_data["boot_data"]))
     
   test_list_all.append(test_list)
   print('p_value=',booted_data["p_value"])
-  print('median_cos=',np.median(booted_data["boot_data"]))
+#  print('median_cos=',np.median(booted_data["boot_data"]))
+  print('vec_div=',np.median(booted_data["boot_data"]))
+  
   print('Количество общих пар',len(pair_all))  
   return test_list_all
 
@@ -221,12 +235,13 @@ def def_boot(series_1,series_2,pair_b,id_1,id_2,test_list_all):
       statistic = np.median, # интересующая нас статистика
       bootstrap_conf_level = 0.95 # уровень значимости
       )
-  test_list.append(id_1)
-  test_list.append(id_2)
-  test_list.append(pair_b)
-  test_list.append(booted_data["p_value"])
-  test_list_all.append(test_list)
-  print('p_value=',booted_data["p_value"])
+  if booted_data["p_value"]:
+    test_list.append(id_1)
+    test_list.append(id_2)
+    test_list.append(pair_b)
+    test_list.append(booted_data["p_value"])
+    test_list_all.append(test_list)
+    print('p_value=',booted_data["p_value"])
   return test_list_all
 
 """## Время"""
@@ -273,6 +288,8 @@ dataset_median.to_excel('dataset_median_2.xls')
 """## НЕ ПОТЕРЯТЬ ОЧЕНЬ ВАЖНОЕ ПРЕОБРАЗОВАНИЕ. Все делается на данных расстояния между нажатиями, но если заменить "between" на "time_key" тоже нужно проверить"""
 
 dataset_work=dataset.groupby(['id','pair'])['between'].agg(list).reset_index()
+#dataset_work=dataset.groupby(['id','pair'])['time_key'].agg(list).reset_index()
+
 dataset_work.columns=['id',	'pair',	'between']
 dataset_work.head()
 
@@ -285,12 +302,12 @@ dataset_work.to_csv('dataset_work.csv')
 
 id_list=dataset_work['id'].unique()
 test_list=[]
-for id_1 in range(len(id_list)-1):
-#for id_1 in range(1,5):
+#for id_1 in range(len(id_list)-1):
+for id_1 in range(1,5):
   id_first=id_list[id_1]
-  for id_2 in range(id_1+1,len(id_list)):
+#  for id_2 in range(id_1+1,len(id_list)):
 #  for id_2 in range(id_1+1,5):
-#  for id_2 in range(16,29):
+  for id_2 in range(16,29):
     id_second=id_list[id_2]  
     print(id_first,id_second)
     p1=set(dataset_work[dataset_work['id']==id_first]['pair'].values)    
@@ -304,7 +321,9 @@ for id_1 in range(len(id_list)-1):
 
 test_list
 
-data_rez=pd.DataFrame(test_list,columns=['id_1', 'id_2' ,'pair_count','p-value','median_cos'])
+#data_rez=pd.DataFrame(test_list,columns=['id_1', 'id_2' ,'pair_count','p-value','median_cos'])
+data_rez=pd.DataFrame(test_list,columns=['id_1', 'id_2' ,'pair_count','p-value','vec_diff'])
+
 data_rez.to_csv('data_rez.csv')
 
 data_rez_300.to_csv('data_rez_300.csv')

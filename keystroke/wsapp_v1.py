@@ -127,51 +127,28 @@ def get_bootstrap_cos(data_1, # числовые значения первой �
         #print(samples_1)
         if len(samples_1)>2 and len(samples_2)>2:
             A=np.array(samples_1)
-            B=np.array(samples_2)  
-            A_med=statistic(A)
-            B_med=statistic(B)                    
+            B=np.array(samples_2)        
 #            print(A)
-#            print(B) 
-            C=statistic(np.subtract(A,B))                  
-            cos_val=C #cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
+#            print(B)                  
+            cos_val=cosine_similarity(A.reshape(1,-1),B.reshape(1,-1))
             #print('cos=',cos_val[0][0])
-            boot_data.append(cos_val)
-            
+            boot_data.append((cos_val[0][0]))
     pd_boot_data = pd.DataFrame(boot_data)
-    p_value=100
-    quants=[0,0]
-    if len(boot_data)>1:
-      left_quant = (1 - bootstrap_conf_level)/2
-      right_quant = 1 - (1 - bootstrap_conf_level) / 2
-      quants = pd_boot_data.quantile([left_quant, right_quant])
+    left_quant = (1 - bootstrap_conf_level)/2
+    right_quant = 1 - (1 - bootstrap_conf_level) / 2
+    quants = pd_boot_data.quantile([left_quant, right_quant])
         
-      p_1 = norm.cdf(
+    p_1 = norm.cdf(
         x = 0, 
         loc = np.mean(boot_data), 
         scale = np.std(boot_data)
-      )
-      p_2 = norm.cdf(
+    )
+    p_2 = norm.cdf(
         x = 0, 
         loc = -np.mean(boot_data), 
         scale = np.std(boot_data)
-      )
-      p_value = min(p_1, p_2) * 2
-        
-      # Визуализация
-#      _, _, bars = plt.hist(pd_boot_data[0], bins = 50)
-#      for bar in bars:
-#          if abs(bar.get_x()) <= quants.iloc[0][0] or abs(bar.get_x()) >= quants.iloc[1][0]:
-#            bar.set_facecolor('red')
-#          else: 
-#            bar.set_facecolor('grey')
-#            bar.set_edgecolor('black')
-#    
-#      plt.style.use('ggplot')
-#      plt.vlines(quants,ymin=0,ymax=50,linestyle='--')
-#      plt.xlabel('boot_data')
-#      plt.ylabel('frequency')
-#      plt.title("Histogram of boot_data")
-#      plt.show()
+    )
+    p_value = min(p_1, p_2) * 2
        
     return {"boot_data": boot_data, 
              "quants": quants, 
@@ -380,7 +357,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                         test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
                         #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
                         
-                        #print (test_list)
+                        print (test_list)
 
                         t_S = "" 
                         for io, o in enumerate(test_list[0]):

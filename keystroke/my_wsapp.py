@@ -16,45 +16,54 @@ import base64, io, os
 import numpy as np
 
 import pandas as pd
+import tensorflow as tf
 from collections import Counter
 import requests
 from scipy.stats import mannwhitneyu
 from scipy.stats import ttest_ind
 from scipy.stats import norm
 from tqdm.auto import tqdm
-from sklearn.metrics.pairwise import cosine_similarity,cosine_distances
+from sklearn.metrics.pairwise import cosine_similarity, cosine_distances
 
-## clickhouse
-#from clickhouse_driver import Client as ClientClickhouse
-#class DataBase():
-#    def __init__(self):
-#        self.client = ClientClickhouse('localhost', settings = { 'use_numpy' : True })
-# 
-#    def createDB(self, x="test_table"):
-#    
-#        self.client.execute(f"""CREATE TABLE {x} 
-#                                (ID Int64,
-#                                 User String) 
-#                            ENGINE = MergeTree() ORDER BY User""")
-#    def delete(self, x):
-#        self.client.execute(f'DROP TABLE IF EXISTS {x}')    
-#    def show_count_tables(self, x):
-#        start = time.time()
-#        LS = self.client.execute(f"SELECT count() FROM {x}")
-#        print (time.time()-start, LS)
-#        return LS
-#    def show_tables(self):
-#        print (self.client.execute('SHOW TABLES'))        
-#    def get_all_data(self, x):
-#        start = time.time()
-#        LS = self.client.execute(f"SELECT * FROM {x}")
-#        print (time.time()-start, len(LS)) 
-#        return LS
-#        
-#clickhouse_table_name = "keypress_id_table"   
-#clickhouse_db = DataBase()
-#clickhouse_db.delete(clickhouse_table_name)
-#clickhouse_db.createDB(clickhouse_table_name)
+# clickhouse
+from clickhouse_driver import Client as ClientClickhouse
+import faiss
+class DataBase():
+    def __init__(self):
+        self.client = ClientClickhouse('localhost', settings = { 'use_numpy' : True })
+ 
+    def createDB(self, x="test_table"):
+    
+        self.client.execute(f"""CREATE TABLE {x} 
+                                (ID Int64,
+                                 User String) 
+                            ENGINE = MergeTree() ORDER BY User""")
+    def delete(self, x):
+        self.client.execute(f'DROP TABLE IF EXISTS {x}')    
+    def show_count_tables(self, x):
+        start = time.time()
+        LS = self.client.execute(f"SELECT count() FROM {x}")
+        print (time.time()-start, LS)
+        return LS
+    def show_tables(self):
+        print (self.client.execute('SHOW TABLES'))        
+    def get_all_data(self, x):
+        start = time.time()
+        LS = self.client.execute(f"SELECT * FROM {x}")
+        print (time.time()-start, len(LS)) 
+        return LS
+        
+clickhouse_table_name = "keypress_id_table"   
+clickhouse_db = DataBase()
+clickhouse_db.delete(clickhouse_table_name)
+clickhouse_db.createDB(clickhouse_table_name)
+
+alf_ = ord('а')
+abc_ = ''.join([chr(i) for i in range(alf_, alf_+32)])
+abc_ += " ,."
+
+
+
 
 def time_pair(JS):
     time_a=[]
@@ -251,6 +260,45 @@ def gen_pd(T, post):
 def sigmoid(z):
     return 1/(1 + np.exp(-z))
 
+def median_filter(data, filt_length=3):
+    '''
+    Computes a median filtered output of each [n_bins, n_channels] data sample
+        and returns output w/ same shape, but median filtered
+    NOTE: as TF doesnt have a median filter implemented, this had to be done in very hacky way...
+    '''
+    edges = filt_length// 2
+
+    # convert to 4D, where data is in 3rd dim (e.g. data[0,0,:,0]
+    exp_data = tf.expand_dims(tf.expand_dims(data, 0), -1)
+    print ("median_filter", exp_data.shape)
+    # get rolling window
+    wins = tf.image.extract_patches(images=exp_data, sizes=[1, filt_length, 1, 1],
+                       strides=[1, 1, 1, 1], rates=[1, 1, 1, 1], padding='VALID')
+    # get median of each window
+    wins = tf.math.top_k(wins, k=2)[0][0, :, :, edges]
+    # Concat edges
+    out = tf.concat((data[:edges, :], wins, data[-edges:, :]), 0)
+
+    return out    
+
+def deep_vector(x):
+       t_arr = np.expand_dims(x, axis=0)
+       processed_img = preprocess_idx(t_arr)
+       preds = model_idx.predict(processed_img)
+       return preds
+
+def similarity(vector1, vector2):
+        return np.dot(vector1, vector2.T) / np.dot(np.linalg.norm(vector1, axis=1, keepdims=True),
+                                                   np.linalg.norm(vector2.T, axis=0, keepdims=True))
+
+
+model_idx = tf.keras.applications.VGG16(include_top=False, 
+                                    weights='imagenet', 
+                                    input_tensor=None, 
+                                    input_shape=None, 
+                                    pooling='max')
+preprocess_idx = tf.keras.applications.vgg16.preprocess_input
+
 class B_Handler(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_name = "main"
@@ -265,7 +313,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
 #            # embedding data -------------->
 #            if os.path.exists(f"media/data_image/{self.path_data}/keypress.index"):
 #                os.remove(f"media/data_image/{self.path_data}/keypress.index")
-#            
+            
 #            try:
 #                self.index = faiss.read_index(f"media/data_image/{self.path_data}/keypress.index")
 #            except:
@@ -364,35 +412,66 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                         await self.channel_layer.group_send(self.room_group_name, _data)  
                     else:
                         post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
-                        T0 = post.text.lower().replace("\n", "")
-    #                    dt0 = gen_pd(T0, post.pure_data)
-    #                    dt1 = gen_pd(T1, response["KEYPRESS"])
-                        dt0 = time_pair(post.pure_data)
-                        dt1 = time_pair(response["KEYPRESS"])
+                        T1 = post.text.lower().replace("\n", "")
+                        
+                        T2 = response["text"].lower().replace("\n", "")
                         #'pair', 'time'
                         #--------------->
-                        
-                        p1 = set(dt0['pair'].values)    
-                        p2 = set(dt1['pair'].values)
-                        pair_all = list(p1 & p2)
-                        print ("ONE----->", pair_all)
-                        test_list = []
-                        test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
-                        #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
-                        
-                        #print (test_list)
+                        if T1 == T2:
+                            print (".................")
+                            dt0 = time_pair(post.pure_data)
+                            dt1 = time_pair(response["KEYPRESS"])
+                            
+                            P_data1 = dt0["time"].tolist()
+                            P_data2 = dt1["time"].tolist()
+                            #------------------------->
+                            
+                            #print (P_data1, P_data2)
+                            zeros_1 = np.zeros((1, len(P_data1)))
+                            zeros_2 = np.zeros((1, len(P_data2)))
+                            for ix, k in enumerate(P_data2):
+#                                if str(k["key_name"]).lower() in abc_:
+                                    zeros_1[0, ix] = P_data1[ix]#["time_press"]
+                                    zeros_2[0, ix] = P_data2[ix]#["time_press"]
+                                    
+                            zeros_1_m = np.float32(zeros_1) #median_filter(np.float32(zeros_1)) 
+                            zeros_2_m = np.float32(zeros_2) #median_filter(np.float32(zeros_2))  
+                            
+                            arr_img_1 = np.zeros((224, 224, 3))
+                            arr_img_1[0:zeros_1_m.shape[0], 0:zeros_1_m.shape[1], 0] = zeros_1_m
+#                            vector1 = deep_vector(np.float32(arr_img_1))
+                            vector1 = deep_vector(arr_img_1)
+                            
+                            arr_img_2 = np.zeros((224, 224, 3))
+                            arr_img_2[0:zeros_2_m.shape[0], 0:zeros_2_m.shape[1], 0] = zeros_2_m
+                            #vector2 = deep_vector(np.float32(arr_img_2))
+                            vector2 = deep_vector(arr_img_2)
+                            
+                            sim = similarity(vector1, vector2)
+                            CS = cosine_similarity(vector1, vector2) 
+                            CD = cosine_distances(vector1, vector2)                             
+                            print (CS, CD, sim)                      
+#                        p1 = set(dt0['pair'].values)    
+#                        p2 = set(dt1['pair'].values)
+#                        pair_all = list(p1 & p2)
+#                        print ("ONE----->", pair_all)
+#                        test_list = []
+#                        test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
+#                        #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
+#                        
+#                        #print (test_list)
 
-                        t_S = "" 
-                        for io, o in enumerate(test_list[0]):
-                            t_S += f"{o}, "
-                        div_temp = f"[{t_S}], p_value = {p_value}, median_cos = {med_cos}, Количество общих пар: {len_pair}"                            
-                        #---------------->
-                        _data={
-                                "type": "wallpost",
-                                "status" : "send_test_p",
-                                "html": div_temp
-                            }
-                        await self.channel_layer.group_send(self.room_group_name, _data) 
+#                        t_S = "" 
+#                        for io, o in enumerate(test_list[0]):
+#                            t_S += f"{o}, "
+#                        div_temp = f"[{t_S}], p_value = {p_value}, median_cos = {med_cos}, Количество общих пар: {len_pair}"                            
+#                        #---------------->
+#                        _data={
+#                                "type": "wallpost",
+#                                "status" : "send_test_p",
+#                                "html": div_temp
+#                            }
+#                        await self.channel_layer.group_send(self.room_group_name, _data) 
 
     async def wallpost(self, res):
         """ Receive message from room group """
