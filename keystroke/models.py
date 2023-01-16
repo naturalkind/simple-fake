@@ -33,6 +33,18 @@ class Post(models.Model):
     date_post = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     user_post = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='us_post', default="", on_delete=models.CASCADE)
 
+    _STATUS = (
+        ('y', 'yes'),
+        ('n', 'no'),
+    )
+
+    status = models.CharField(
+        max_length=1,
+        choices=_STATUS,
+        blank=True,
+        default='n',
+        help_text='Проверка',
+    )
     def __unicode__(self):
             return u'name: %s , id: %s' % (self.text, self.id)
 

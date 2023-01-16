@@ -26,6 +26,7 @@ urlpatterns = [
     path(r'registration/', keystroke.registration),
     path(r'registrationend/', keystroke.registrationend),
     path(r'login/', keystroke.login),
+    path(r'loginend/', keystroke.loginend),
     path(r'keystroke/', keystroke.keystroke),
     re_path(r'^data/(?P<post>\d+)/$', keystroke.post), # страница материала
     re_path(r'^user_page/(?P<user_id>\d+)/$', keystroke.user_page), # страница пользователя

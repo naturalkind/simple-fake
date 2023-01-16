@@ -592,6 +592,7 @@ ws.onmessage = function(data) {
         
 };
 
+// регистрация шаг 2
 function send_for_reg(self) {
     var crsv = getCookie('csrftoken'); // токен
     let data = JSON.stringify({'KEYPRESS': arr,
@@ -612,6 +613,51 @@ function send_for_reg(self) {
         }
         let data = JSON.stringify({'KEYPRESS': arr,
                                    'text':text_input.innerText});
+//        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+//        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+//        console.log(S, S1, S===S1);
+//        console.log(text_input.innerHTML, document.getElementById("block_post").innerHTML);  
+//        console.log(text_input.innerText.normalize().length, text_input.innerText.length);                          
+//        console.log(text_input.innerText===document.getElementById("block_post").innerText)                           
+                                   
+        http.send(data);  
+    }
+}
+
+// вход шаг 2
+function send_for_log(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    let data = JSON.stringify({'KEYPRESS': arr,
+                               'text':text_input.innerText}); 
+    // console.log("SEND_FOR_REG", crsv, data);   
+    var http = createRequestObject();
+    var linkfull = '/loginend/';
+    if (http) {
+        http.open('post', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    document.getElementById("show_value").removeChild(t_el);
+                    var data = JSON.parse(http.responseText);
+                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
+                    document.getElementById("blockup").innerHTML = `<div id="node">
+                                    <br>
+                                    ${data["html"]}
+                                    <br>
+                                    <button onclick="close_div()">close</button>
+                                </div>`
+                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+                    document.getElementById("blockup").style.display = "block";
+                    document.body.style.overflow = 'hidden';
+                    //window.location.replace("/");
+                }
+            }
+        }
+        let data = JSON.stringify({'KEYPRESS': arr,
+                                   'text':text_input.innerText});
+        document.getElementById("show_value").appendChild(t_el);
 //        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
 //        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
 //        console.log(S, S1, S===S1);

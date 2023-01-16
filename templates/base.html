@@ -12,7 +12,10 @@
             <a id="user" onclick="USER(this, {{ username.id }})">{{ username }}</a>
             <button id="quit" onclick="quit()">EXIT</button>
         </div>  
-    {% endif %}  
+    {% endif %} 
+    {% if username.is_superuser %}
+        <button type="button" class='Button'  onclick="crate_data_all(this)">DOWNLOAD DATA ALL</button> 
+    {% endif %} 
     <label id="icon" for="name" style="margin: 10px;" class="icon_back"><i class="icon-chevron-left"></i></label>
     <a href="https://b24cyber.com" target="_blank" id="logo24">
        <img width="140" height="140" src="/media/images/B24CYBER-2-768x768.png">    

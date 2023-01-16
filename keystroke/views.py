@@ -134,6 +134,7 @@ def registrationend(request):
                 T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
                 post = Post()
                 post.pure_data = json_data["KEYPRESS"]
+                post.status = "y"
                 post.text = T
                 post.user_post = newuser
                 post.save()
@@ -143,6 +144,113 @@ def registrationend(request):
         pass
     return render(request, 'createpost.html', registration)
 
+
+#def login(request):
+#    args = {}
+#    args.update(csrf(request))
+#    args['username'] = auth.get_user(request)
+#    #print (request, request.POST)
+#    if request.POST:
+#        username = request.POST.get('username','')
+#        password = request.POST.get('password','')
+#        user = auth.authenticate(username=username,password=password)
+#        if user is not None:
+#            auth.login(request, user)
+#            return redirect('/')
+#        else:
+#            args['login_error']= 'Пользователь не найден'
+#            return render(request, 'login.html',args)
+#    else:
+#        return render(request, 'login.html', args)
+
+# новая функция бутстреп для косинуса угла между векторами
+def get_bootstrap_cos(data_1, # числовые значения первой выборки
+                      data_2, # числовые значения второй выборки
+                      boot_it = 1000, # количество бутстрэп-подвыборок
+                      statistic = np.mean, # интересующая нас статистика
+                      bootstrap_conf_level = 0.95, # уровень значимости
+                      pair_all=['а ']):
+    boot_len = 1  #max([len(data_column_1), len(data_column_2)])
+    boot_data = []
+    for i in tqdm(range(boot_it)): # извлекаем подвыборки
+        samples_1=[]
+        samples_2=[]
+        cos_val=100
+        for pair_b in pair_all:
+          data_column_1=data_1[data_1['pair']==pair_b]['time']
+          data_column_2=data_2[data_2['pair']==pair_b]['time']
+          if len(data_column_1)>2 and len(data_column_2)>2:
+              val_1 =(np.random.choice(data_column_1, size=1, replace=True))
+              val_2 =(np.random.choice(data_column_2, size=1, replace=True))
+              samples_1.append(val_1[0].astype("float"))   
+              samples_2.append(val_2[0].astype("float"))
+        if len(samples_1)>2 and len(samples_2)>2:
+            A=np.array(samples_1)
+            B=np.array(samples_2)
+            A_med=statistic(A)
+            B_med=statistic(B)                
+            C=statistic(np.subtract(A,B))                 
+            cos_val=C 
+            boot_data.append(cos_val)
+    pd_boot_data = pd.DataFrame(boot_data)
+    p_value=100
+    quants=[0,0]
+    if len(boot_data)>1:
+        left_quant = (1 - bootstrap_conf_level)/2
+        right_quant = 1 - (1 - bootstrap_conf_level) / 2
+        quants = pd_boot_data.quantile([left_quant, right_quant])
+        
+        p_1 = norm.cdf(
+           x = 0, 
+           loc = np.mean(boot_data), 
+           scale = np.std(boot_data)
+        )
+        p_2 = norm.cdf(
+           x = 0, 
+           loc = -np.mean(boot_data), 
+           scale = np.std(boot_data)
+        )
+        p_value = min(p_1, p_2) * 2
+        
+    return {"boot_data": boot_data, 
+            "quants": quants, 
+            "p_value": p_value}
+
+def def_boot_cos(data_1, data_2, pair_all, test_list_all):
+    test_list=[]
+    booted_data=get_bootstrap_cos(data_1,
+                                  data_2, # числовые значения второй выборки
+                                  boot_it = 50,#1000, # количество бутстрэп-подвыборок
+                                  statistic = np.median, # интересующая нас статистика
+                                  bootstrap_conf_level = 0.95, # уровень значимости
+                                  pair_all=pair_all
+                                  )
+                                  
+    test_list.append(len(pair_all))
+    test_list.append(booted_data["p_value"])
+    test_list.append(np.median(booted_data["boot_data"]))
+    test_list_all.append(test_list)
+    return test_list_all
+
+
+def time_pair(JS):
+    time_a=[]
+    for i in range(len(JS)-1):
+        time_JS=[]
+        pair=JS[i]['key_name']+JS[i+1]['key_name']
+        t11= JS[i]['time_keydown']
+        t12= JS[i]['time_keyup']
+        t1=t12-t11
+        t21= JS[i+1]['time_keydown']
+        t22= JS[i+1]['time_keyup']
+        t2=t22-t21
+        time_JS.append(pair)
+        time_JS.append(t21-t12)    
+        time_a.append(time_JS)
+    dataset = pd.DataFrame(time_a, columns=['pair', 'time'])
+    return dataset
+
+# вход новая версия
 def login(request):
     args = {}
     args.update(csrf(request))
@@ -152,14 +260,84 @@ def login(request):
         username = request.POST.get('username','')
         password = request.POST.get('password','')
         user = auth.authenticate(username=username,password=password)
+        print (user)
         if user is not None:
-            auth.login(request, user)
-            return redirect('/')
-        else:
-            args['login_error']= 'Пользователь не найден'
-            return render(request, 'login.html',args)
+            request.session['login'] = request.POST
+            return HttpResponseRedirect('/loginend')
     else:
         return render(request, 'login.html', args)
+
+
+#1/(1+е(-ln(p-value/0.05)). 
+#А после упрощающих преобразований x/(x+0.05)
+def sigmoid(z):
+    z = np.log((z/0.05))
+    return 1/(1 + np.exp(-z))
+    
+   
+
+def loginend(request):
+    login = request.session.get('login')
+    try:
+        json_data = json.loads(request.body)
+        if login:
+            
+            username = login['username']
+            password = login['password']
+            user = auth.authenticate(username=username,password=password)
+            if user is not None:
+                #print ("......", login, json_data)
+                # данные полученные для проверки
+                T0 = json_data['text']
+                dt0 = time_pair(json_data["KEYPRESS"])
+                p0 = set(dt0['pair'].values)  
+
+                posts = list(Post.objects.filter(status="y"))
+#                for_all_data = {}
+                for_all_data = []
+                div_out = ""
+                for post in posts:
+                    T1 = post.text
+                    dt1 = time_pair(post.pure_data)
+                    p1 = set(dt1['pair'].values)
+                    pair_all = list(p0 & p1)
+                    #print ("ONE----->", pair_all, len(T0), len(T1))
+                    test_list = []
+                    test_list = def_boot_cos(dt0, dt1, pair_all, test_list)
+                    sig = sigmoid(test_list[0][1])
+                    #sig = sig/(sig+0.05)
+                    print ("TWO----->", test_list[0], sig)
+#                    for_all_data[post.user_post.id] = sig
+                    for_all_data.append([post.user_post.id, sig]) 
+                                   
+#                    div_temp = f"ID POST {post.id}, USER POST {post.user_post} p_value = {test_list[0][1]} / {sig}, median_cos = {test_list[0][2]}, Количество общих пар: {test_list[0][0]}\n"
+#                    div_out += div_temp
+                div_out += f"REQUEST USER: {user.username}, {user.id}"
+                
+                # Визуализация
+                dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
+                fig, ax = plt.subplots(figsize=(9,6))
+                sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
+                ax.set_title("Histogram of p-value users")
+                dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
+                ax.set_xticklabels(dataset_["value"])
+                figdata = io.BytesIO()
+                fig.savefig(figdata, format='png')
+                figdata_png = base64.b64encode(figdata.getvalue()).decode()
+                div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
+#                plt.show()                
+                
+                
+                # аутентификация
+                auth.login(request, user)    
+#                return HttpResponse(div_out)    
+                return JsonResponse({"user":f'{user.username}',
+                                     "html": div_out})
+    except:
+        pass
+    return render(request, 'createpost_log.html', login)
+
+###----------------------------------------------------------------------->
 
 # обработка нажатий
 
@@ -245,62 +423,6 @@ def cratealldata(request):
         csv_writer.writerows(cursor)
     conn.close()
     return JsonResponse({"answer":f'/media/data_image/out.csv'})
-    
-# предыдущая версия    
-#def cratealldata(request):
-#    users = User.objects.all()
-#    all_user_m = []
-#    all_user_c = []
-#    for u in users:
-#        posts = Post.objects.filter(user_post=u)
-#        #print (u, posts)
-#        list_post_m = []
-#        
-#        np_zeros2 = np.zeros((len(combination), 1)) #len(control_text), 
-#        for pp in posts:
-#            T = pp.text.lower().replace("\n", "")
-#            np_zeros1 = np.zeros((len(combination), 1)) #len(control_text), 
-#            for ih, h in enumerate(combination):
-#                idx = indices(T, h)
-#                if idx != []:
-#                    temp_ls = []
-#                    for k in idx:
-#                        temp_ls.append(pp.pure_data[k+1]["time_keydown"]-pp.pure_data[k]["time_keyup"])
-#                    np_zeros1[ih, 0] = np.median(np.array(temp_ls))
-#                    np_zeros2[ih, 0] += T.count(h)
-#            list_post_m.append(np_zeros1)
-#          
-#        if len(posts) > 0:  
-#            all_user_c.append(np_zeros2)
-#        
-#        if len(list_post_m) > 1:
-#            m_post_user = np.median(np.array(list_post_m), axis=0)
-#            all_user_m.append(m_post_user)
-#        elif len(list_post_m) != 0:
-#            result = np.array(list_post_m).reshape((-1, 1))
-#            all_user_m.append(result)
-#            print (result.shape)            
-##            all_user_m.append(m_post_user)
-#            #print (m_post_user)
-#            #print (u, len(list_post_m), np.array(list_post_m).shape, m_post_user.shape)
-#    #print (np.array(all_user_m).shape)
-#    
-#    AAA1 = np.array(all_user_c)[:,:,0]
-#    dataset1 = pd.DataFrame(data=AAA1[0:,0:], index=[i for i in range(AAA1.shape[0])], columns=combination )
-#    #dataset1[combination] = dataset1[combination].replace(['0', 0], np.nan)
-#    dataset1.to_csv(f'media/data_image/{request.user.path_data}/key_count.csv')
-#    print (dataset1)
-#    
-#    
-#    AAA = np.array(all_user_m)[:,:,0]
-#    dataset = pd.DataFrame(data=AAA[0:,0:], index=[i for i in range(AAA.shape[0])], columns=combination)
-#    #dataset[combination] = dataset[combination].replace(['0', 0], np.nan)
-#    dataset.to_csv(f"media/data_image/{request.user.path_data}/key_median.csv")
-#    print(dataset)
-#    
-#    return JsonResponse({"answer":f'/media/data_image/{request.user.path_data}/key_median.csv',
-#                         "answer_count": f'/media/data_image/{request.user.path_data}/key_count.csv'})
-#    
     
 """    
 расскажем как мы делали работу которая должна показать, что человек все еще можеть быть первым в познаниях всего.
