@@ -6,6 +6,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required 
 from django.contrib import auth
 from django.http import HttpResponse, Http404, JsonResponse
+from django.template.loader import render_to_string
+from django.template import loader
+from django.template import Template, Context
 from keystroke.models import *
 import os
 import uuid
@@ -233,28 +236,51 @@ def def_boot_cos(data_1, data_2, pair_all, test_list_all):
     return test_list_all
 
 
+#def time_pair(JS):
+#    time_a=[]
+#    for i in range(len(JS)-1):
+#        time_JS=[]
+#        pair=JS[i]['key_name']+JS[i+1]['key_name']
+#        t11= JS[i]['time_keydown']
+#        try:
+#            t12= JS[i]['time_keyup']
+#        except KeyError:
+#            t12= JS[i]['time_keydown']
+#        
+#        t1=t12-t11
+#        t21= JS[i+1]['time_keydown']
+#        try:
+#            t22= JS[i+1]['time_keyup']
+#        except KeyError:
+#            t22= JS[i+1]['time_keydown']
+#        
+#        t2=t22-t21
+#        time_JS.append(pair)
+#        time_JS.append(t21-t12)    
+#        time_a.append(time_JS)
+#    dataset = pd.DataFrame(time_a, columns=['pair', 'time'])
+#    return dataset
+
 def time_pair(JS):
     time_a=[]
     for i in range(len(JS)-1):
         time_JS=[]
         pair=JS[i]['key_name']+JS[i+1]['key_name']
-        t11= JS[i]['time_keydown']
-        t12= JS[i]['time_keyup']
-        t1=t12-t11
-        t21= JS[i+1]['time_keydown']
-        t22= JS[i+1]['time_keyup']
-        t2=t22-t21
+        t1= JS[i]['time_keydown']
+        t2= JS[i+1]['time_keydown']
         time_JS.append(pair)
-        time_JS.append(t21-t12)    
+        time_JS.append(t2-t1)    
         time_a.append(time_JS)
     dataset = pd.DataFrame(time_a, columns=['pair', 'time'])
     return dataset
+
 
 # вход новая версия
 def login(request):
     args = {}
     args.update(csrf(request))
     args['username'] = auth.get_user(request)
+    
     #print (request, request.POST)
     if request.POST:
         username = request.POST.get('username','')
@@ -264,7 +290,15 @@ def login(request):
         if user is not None:
             request.session['login'] = request.POST
             return HttpResponseRedirect('/loginend')
+        else:
+            t = loader.get_template('login.html')
+            template = Template('{%extends "' + "base.html" + '"%} ...'+t.template.source)
+            context = Context(args)
+            result = template.render(context)
+            return HttpResponse(result)
+            
     else:
+        args['base'] = ""
         return render(request, 'login.html', args)
 
 
@@ -278,10 +312,9 @@ def sigmoid(z):
 
 def loginend(request):
     login = request.session.get('login')
-    try:
+    if request.body:
         json_data = json.loads(request.body)
         if login:
-            
             username = login['username']
             password = login['password']
             user = auth.authenticate(username=username,password=password)
@@ -296,9 +329,9 @@ def loginend(request):
 #                for_all_data = {}
                 for_all_data = []
                 div_out = ""
-                for post in posts:
-                    T1 = post.text
-                    dt1 = time_pair(post.pure_data)
+                for post_ in posts:
+                    T1 = post_.text
+                    dt1 = time_pair(post_.pure_data)
                     p1 = set(dt1['pair'].values)
                     pair_all = list(p0 & p1)
                     #print ("ONE----->", pair_all, len(T0), len(T1))
@@ -308,33 +341,31 @@ def loginend(request):
                     #sig = sig/(sig+0.05)
                     print ("TWO----->", test_list[0], sig)
 #                    for_all_data[post.user_post.id] = sig
-                    for_all_data.append([post.user_post.id, sig]) 
-                                   
-#                    div_temp = f"ID POST {post.id}, USER POST {post.user_post} p_value = {test_list[0][1]} / {sig}, median_cos = {test_list[0][2]}, Количество общих пар: {test_list[0][0]}\n"
-#                    div_out += div_temp
+#                    for_all_data.append([post_.user_post.id, sig])
+                    for_all_data.append([post_.user_post.username, sig])  
                 div_out += f"REQUEST USER: {user.username}, {user.id}"
                 
                 # Визуализация
                 dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
                 fig, ax = plt.subplots(figsize=(9,6))
-                sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
+                g = sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
                 ax.set_title("Histogram of p-value users")
                 dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
-                ax.set_xticklabels(dataset_["value"])
+                for index, data in enumerate(dataset_["value"].tolist()):
+                    plt.text(x = index-.25, y = data, s = f"{data}")
+                plt.tight_layout()
+
+#                ax.bar_label(dataset_["value"].tolist()) matplotlib v3.4+
                 figdata = io.BytesIO()
                 fig.savefig(figdata, format='png')
                 figdata_png = base64.b64encode(figdata.getvalue()).decode()
                 div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
 #                plt.show()                
                 
-                
                 # аутентификация
                 auth.login(request, user)    
-#                return HttpResponse(div_out)    
                 return JsonResponse({"user":f'{user.username}',
                                      "html": div_out})
-    except:
-        pass
     return render(request, 'createpost_log.html', login)
 
 ###----------------------------------------------------------------------->
