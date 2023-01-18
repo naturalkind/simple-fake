@@ -351,6 +351,17 @@ def loginend(request):
     #                    for_all_data.append([post_.user_post.id, sig])
                     for_all_data.append([post_.user_post.username, sig])  
                 div_out += f"REQUEST USER: {user.username}, {user.id}"
+                #------------------------------------------------------->
+                # аутентификация
+                auth.login(request, user)  
+                # создания текста при регистрации
+                T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
+                post = Post()
+                post.pure_data = json_data["KEYPRESS"]
+                post.text = T
+                post.user_post = user
+                post.save()
+                #------------------------------------------------------->
                 if for_all_data:
                     # Визуализация
                     dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
@@ -369,12 +380,10 @@ def loginend(request):
                     div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
     #                plt.show()                
                     
-                    # аутентификация
-                    auth.login(request, user)    
+  
                     return JsonResponse({"user":f'{user.username}',
                                          "html": div_out})                
                 else:
-                    auth.login(request, user)  
                     div_out += f'<br>ERROR, no data to compare, {user.username} enter'
                     return JsonResponse({"user":f'{user.username}',
                                          "html": div_out})            
