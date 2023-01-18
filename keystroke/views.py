@@ -115,11 +115,11 @@ def registration(request):
 
 def registrationend(request):
     registration = request.session.get('registration')
-    try:
-        json_data = json.loads(request.body)
-        if registration:
+    if registration:
+        if request.body:
             newuser_form = UserForm(registration)
             if newuser_form.is_valid():
+                json_data = json.loads(request.body)
                 path = str(uuid.uuid4())[:12]
                 
                 if not os.path.exists(f"media/data_image/{path}"):
@@ -132,6 +132,7 @@ def registrationend(request):
                 newuser = auth.authenticate(username=newuser_form.cleaned_data['username'],
                                             password=newuser_form.cleaned_data['password2'],
                                             )
+                print (newuser, request)
                 auth.login(request, newuser)
                 
                 T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
@@ -141,12 +142,16 @@ def registrationend(request):
                 post.text = T
                 post.user_post = newuser
                 post.save()
-                #return redirect('/')
+                return redirect('/')
                 #print ("REGISTEREND", request.POST, registration, json_data)
-    except:
-        pass
-    return render(request, 'createpost.html', registration)
-
+        else:
+            try:
+                registration = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}
+                return render(request, 'createpost.html', registration)
+            except IndexError:
+                return render(request, 'createpost.html', registration)
+    else:
+        return render(request, 'createpost.html', registration)
 
 #def login(request):
 #    args = {}
@@ -312,9 +317,10 @@ def sigmoid(z):
 
 def loginend(request):
     login = request.session.get('login')
-    if request.body:
-        json_data = json.loads(request.body)
-        if login:
+    
+    if login:
+        if request.body:
+            json_data = json.loads(request.body)
             username = login['username']
             password = login['password']
             user = auth.authenticate(username=username,password=password)
@@ -326,7 +332,7 @@ def loginend(request):
                 p0 = set(dt0['pair'].values)  
 
                 posts = list(Post.objects.filter(status="y"))
-#                for_all_data = {}
+    #                for_all_data = {}
                 for_all_data = []
                 div_out = ""
                 for post_ in posts:
@@ -340,33 +346,51 @@ def loginend(request):
                     sig = sigmoid(test_list[0][1])
                     #sig = sig/(sig+0.05)
                     print ("TWO----->", test_list[0], sig)
-#                    for_all_data[post.user_post.id] = sig
-#                    for_all_data.append([post_.user_post.id, sig])
+    #                    for_all_data[post.user_post.id] = sig
+    #                    for_all_data.append([post_.user_post.id, sig])
                     for_all_data.append([post_.user_post.username, sig])  
                 div_out += f"REQUEST USER: {user.username}, {user.id}"
-                
-                # Визуализация
-                dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
-                fig, ax = plt.subplots(figsize=(9,6))
-                g = sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
-                ax.set_title("Histogram of p-value users")
-                dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
-                for index, data in enumerate(dataset_["value"].tolist()):
-                    plt.text(x = index-.25, y = data, s = f"{data}")
-                plt.tight_layout()
+                if for_all_data:
+                    # Визуализация
+                    dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
+                    fig, ax = plt.subplots(figsize=(9,6))
+                    g = sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
+                    ax.set_title("Histogram of p-value users")
+                    dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
+                    for index, data in enumerate(dataset_["value"].tolist()):
+                        plt.text(x = index-.25, y = data, s = f"{data}")
+                    plt.tight_layout()
 
-#                ax.bar_label(dataset_["value"].tolist()) matplotlib v3.4+
-                figdata = io.BytesIO()
-                fig.savefig(figdata, format='png')
-                figdata_png = base64.b64encode(figdata.getvalue()).decode()
-                div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
-#                plt.show()                
-                
-                # аутентификация
-                auth.login(request, user)    
-                return JsonResponse({"user":f'{user.username}',
-                                     "html": div_out})
-    return render(request, 'createpost_log.html', login)
+    #                ax.bar_label(dataset_["value"].tolist()) matplotlib v3.4+
+                    figdata = io.BytesIO()
+                    fig.savefig(figdata, format='png')
+                    figdata_png = base64.b64encode(figdata.getvalue()).decode()
+                    div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
+    #                plt.show()                
+                    
+                    # аутентификация
+                    auth.login(request, user)    
+                    return JsonResponse({"user":f'{user.username}',
+                                         "html": div_out})                
+                else:
+                    auth.login(request, user)  
+                    div_out += f'<br>ERROR, no data to compare, {user.username} enter'
+                    return JsonResponse({"user":f'{user.username}',
+                                         "html": div_out})            
+        else:
+            try:
+                login = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}  
+                return render(request, 'createpost_log.html', login)
+            except IndexError:
+                return render(request, 'createpost_log.html', login)
+    else:
+        return JsonResponse({"user": 'None',
+                             "html": 'Error'})        
+#        try:
+#            login = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}  
+#            return render(request, 'createpost_log.html', login)
+#        except KeyError:      
+#        return render(request, 'createpost_log.html', login)
 
 ###----------------------------------------------------------------------->
 

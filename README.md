@@ -27,6 +27,8 @@ pip install -r requirements.txt
 
 ./manage.py migrate --run-syncdb
 
+./manage.py createsuperuser
+
 ./manage.py dumpdata > data_dump.json
 ```
 
@@ -53,4 +55,4 @@ test
 - при регистрации нет отображения имени юзера   
 - исправление ошибок   
 - сохранение текстов авторизации   
-
+- выводить текст из базы, с возможностью переключения :heavy_check_mark:   
