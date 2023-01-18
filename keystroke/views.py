@@ -145,8 +145,9 @@ def registrationend(request):
                 return redirect('/')
                 #print ("REGISTEREND", request.POST, registration, json_data)
         else:
+            registration["user_"] = registration['username']
             try:
-                registration = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}
+                registration["post_"] = Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text
                 return render(request, 'createpost.html', registration)
             except IndexError:
                 return render(request, 'createpost.html', registration)
@@ -319,11 +320,11 @@ def loginend(request):
     login = request.session.get('login')
     
     if login:
+        username = login['username']
+        password = login['password']
+        user = auth.authenticate(username=username,password=password)
         if request.body:
             json_data = json.loads(request.body)
-            username = login['username']
-            password = login['password']
-            user = auth.authenticate(username=username,password=password)
             if user is not None:
                 #print ("......", login, json_data)
                 # данные полученные для проверки
@@ -378,8 +379,10 @@ def loginend(request):
                     return JsonResponse({"user":f'{user.username}',
                                          "html": div_out})            
         else:
+            login = {}
+            login["user_"] = user.username
             try:
-                login = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}  
+                login["post_"] = Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text
                 return render(request, 'createpost_log.html', login)
             except IndexError:
                 return render(request, 'createpost_log.html', login)
