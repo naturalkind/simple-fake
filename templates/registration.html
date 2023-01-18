@@ -3,6 +3,7 @@
         <form action="/registration/" method="POST" enctype="multipart/form-data" id="FormReg">
             {% csrf_token %}
             <hr>
+            <h3>REGISTRATION</h3>
             <div id="start_step_reg">
                 <label id="icon" for="name"><i class="icon-user"></i></label>
                 <input type="text" name="username" id="name_name" placeholder="Name" required/>
@@ -14,10 +15,9 @@
                 <input type="password" name="password2" id="name_pass" placeholder="Password" required/>                
             </div>
             <span id='UploadArea_reg'></span>
+            <br>
+            <button type='submit' id="Confirm" class='Button' onclick="Register()">CONFIRM</button>
             <hr>  
-            <p id="InfoReg">By clicking Register, you agree on our <a href="#">terms and condition</a>.</p>
-<!--            <input type="submit" class="button" id="Confirm" value="Confirm">-->
-            <a class="button" id="Confirm" onclick="Register()">Confirm</a>
        </form>
     </div>
 {% endblock reg %}

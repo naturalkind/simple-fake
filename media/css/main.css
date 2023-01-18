@@ -276,13 +276,6 @@ animation: spin 2s linear infinite;
     margin-bottom: 0px;
 }
 
-#InfoReg {
-    font-size: 12px;
-    width: 150px;
-    display: inline-block;
-    margin-left: 18px;
-    margin-top: 10px;
-}
 #testbox h1 {
   font-size: 32px;
   font-weight: 300;
@@ -298,7 +291,7 @@ animation: spin 2s linear infinite;
 
 .testbox {
   margin: 0 auto;
-  width: 343px; 
+  width: 490px; 
   background-color: #405976; 
 <!--  background-color: #507299; margin: 20px auto;-->
   -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
@@ -364,25 +357,23 @@ animation: spin 2s linear infinite;
   opacity: 0.3;
 }
 
-#testbox input[type=text], #testbox input[type=password]{
-  width: 200px; 
-  height: 39px; 
-  -webkit-border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
-  -moz-border-radius: 0px 4px 4px 0px/0px 0px 4px 4px; 
-  border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
-  background-color: #fff; 
-  -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-  -moz-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-  box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-  border: solid 1px #cbc9c9;
-  margin-left: -5px;
-  margin-top: 13px; 
-  padding-left: 10px;
+#testbox input[type=text], 
+#testbox input[type=password]{
+    width: 80%; 
+    height: 39px; 
+    -webkit-border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
+    -moz-border-radius: 0px 4px 4px 0px/0px 0px 4px 4px; 
+    border-radius: 0px 4px 4px 0px/5px 5px 4px 4px; 
+    background-color: #fff; 
+    -webkit-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+    -moz-box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+    box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+    border: solid 1px #cbc9c9;
+    margin-left: -5px;
+    margin-top: 13px; 
+    padding-left: 10px;
 }
 
-<!--#testbox input[type=password]{-->
-<!--  margin-bottom: 25px;-->
-<!--}-->
 
 #icon {
   display: inline-block;
@@ -599,4 +590,18 @@ img#bar_p {
     display: block;
     max-width: 800px;
 }
-
+#reg h3,
+#log h3 {
+    color: white;
+    text-align: center;    
+}
+#node input[type=checkbox] {
+    /* Double-sized Checkboxes */
+    -ms-transform: scale(2); /* IE */
+    -moz-transform: scale(2); /* FF */
+    -webkit-transform: scale(2); /* Safari and Chrome */
+    -o-transform: scale(2); /* Opera */
+    transform: scale(2);
+    padding: 10px;
+    margin:10px;
+}
