@@ -160,6 +160,14 @@ setInterval(() => {
 
 //--------------------------->
 //https://stackoverflow.com/questions/3972014/get-contenteditable-caret-position
+
+//https://translated.turbopages.org/proxy_u/en-ru.ru.f36662aa-63cc1d4d-b749bddc-74722d776562/https/stackoverflow.com/questions/1444477/keycode-and-charcode
+
+//https://github.com/iliakan/javascript-tutorial-ru/blob/master/2-ui/3-event-details/9-keyboard-events/article.md
+
+//https://stackoverflow.com/questions/10282314/what-is-a-r-and-why-would-one-use-it-with-a-n
+
+
 var tKey = {}
 
 function getCaret() {
@@ -224,7 +232,12 @@ function handle(e) {
                 var keyTimes = {};
                 //keyTimes["key_code"] = e.keyCode;
                 let K;
-                if (e.key =="Enter") { K = "\n"} else { K = e.key };
+                if (e.key =="Enter") { 
+                    //K = "\n"; 
+                    var charCode = e.which || e.keyCode;
+                    K = String.fromCharCode(charCode); //String.fromCodePoint
+                    console.log(".....", K);
+                } else { K = e.key };
                 keyTimes["key_name"] = K;
                 keyTimes["time_keydown"] = new Date().getTime()/1000.0;
                 keyTimes["time_keyup"] = new Date().getTime()/1000.0;
@@ -260,16 +273,16 @@ function handle(e) {
 
 
 
-function send_for_log(self) {
-    
-    let value_pure = '';
-    for (var i = 0; i < arr.length; i++) {
-        value_pure += arr[i].key_name;
-    }
-    console.log(arr, text_input.innerText, value_pure, idx_arr)
-    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
-                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
-}
+//function send_for_log(self) {
+//    
+//    let value_pure = '';
+//    for (var i = 0; i < arr.length; i++) {
+//        value_pure += arr[i].key_name;
+//    }
+//    console.log(arr, text_input.innerText, value_pure, idx_arr)
+//    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
+//                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
+//}
 
 //--------------------------------->
 
@@ -678,47 +691,48 @@ function send_for_reg(self) {
 }
 
 // вход шаг 2
-//function send_for_log(self) {
-//    var crsv = getCookie('csrftoken'); // токен
-//    let data = JSON.stringify({'KEYPRESS': arr,
-//                               'text':text_input.innerText}); 
-//    // console.log("SEND_FOR_REG", crsv, data);   
-//    var http = createRequestObject();
-//    var linkfull = '/loginend/';
-//    if (http) {
-//        http.open('post', linkfull);
-//        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-//        http.setRequestHeader('X-CSRFToken', crsv);
-//        http.onreadystatechange = function () {
-//            if (http.readyState == 4) {
-//                if (http.status == 200) {
-//                    document.getElementById("show_value").removeChild(t_el);
-//                    var data = JSON.parse(http.responseText);
-//                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
-//                    document.getElementById("blockup").innerHTML = `<div id="node">
-//                                    <br>
-//                                    ${data["html"]}
-//                                    <br>
-//                                    <button onclick="close_div()">close</button>
-//                                </div>`
-//                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
-//                    document.getElementById("blockup").style.display = "block";
-//                    document.body.style.overflow = 'hidden';
-//                    //window.location.replace("/");
-//                }
-//            }
-//        }
-//        let data = JSON.stringify({'KEYPRESS': arr,
-//                                   'text':text_input.innerText});
-//        document.getElementById("show_value").appendChild(t_el);
-////        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
-////        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
-////        console.log(S, S1, S===S1);
-////        console.log(text_input.innerHTML, document.getElementById("block_post").innerHTML);  
-////        console.log(text_input.innerText.normalize().length, text_input.innerText.length);                          
-////        console.log(text_input.innerText===document.getElementById("block_post").innerText)                           
-//                                   
-//        http.send(data);  
-//    }
-//}
+function send_for_log(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    let data = JSON.stringify({'KEYPRESS': arr,
+                               'text':text_input.innerText}); 
+    // console.log("SEND_FOR_REG", crsv, data);   
+    var http = createRequestObject();
+    var linkfull = '/loginend/';
+    if (http) {
+        http.open('post', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    document.getElementById("show_value").removeChild(t_el);
+                    var data = JSON.parse(http.responseText);
+                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
+                    document.getElementById("blockup").innerHTML = `<div id="node">
+                                    <br>
+                                    ${data["html"]}
+                                    <br>
+                                    <button onclick="close_div()">close</button>
+                                </div>`
+                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+                    document.getElementById("blockup").style.display = "block";
+                    document.body.style.overflow = 'hidden';
+                    //window.location.replace("/");
+                }
+            }
+        }
+        let data = JSON.stringify({'KEYPRESS': arr,
+                                   'text':text_input.innerText});
+        document.getElementById("show_value").appendChild(t_el);
+        let value_pure = '';
+        for (var i = 0; i < arr.length; i++) {
+            value_pure += arr[i].key_name;
+        }
+        if (text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim()) {
+            console.log(arr, text_input.innerText, value_pure, idx_arr)
+            console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim());
+            http.send(data);  
+        }
+    }
+}
 
