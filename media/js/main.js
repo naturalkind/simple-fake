@@ -40,17 +40,36 @@ var text_input = document.getElementById("text_input");
 
 var arr = [];
 //"Backspace", "ArrowLeft", "ArrowRight", 
-list_exept = ["ArrowDown", "ArrowUp", "CapsLock", "Alt", "Control", "Shift"]
+list_exept = ["CapsLock", "Alt", "Control", "Shift", "Insert"]
 // подготовка текста к отправке на сервер
 var idx_arr = 0;
 text_input.onkeydown = text_input.onkeyup = text_input.onkeypress = text_input.onclick = handle;
 //text_input.textContent
 
-// позиция буквы в тексте div role=textbox https://stackoverflow.com/questions/8105824/determine-the-position-index-of-a-character-within-an-html-element-when-clicked
-function getSelectionPosition () {
-  var selection = window.getSelection();
-  idx_arr = selection.focusOffset
+// позиция буквы в тексте div role=textbox 
+// https://stackoverflow.com/questions/8105824/determine-the-position-index-of-a-character-within-an-html-element-when-clicked
+
+// WORK
+//function getSelectionPosition () {
+//  var selection = window.getSelection();
+//  idx_arr = selection.focusOffset
+//}
+
+
+// WORK2
+function getCaretCharOffset(element) {
+  var caretOffset = 0;
+  if (window.getSelection) {
+    var range = window.getSelection().getRangeAt(0);
+    var preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(element);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    caretOffset = preCaretRange.toString().length;
+  } 
+  return caretOffset;
 }
+
+
 
 //--------------------------->
 
@@ -58,12 +77,12 @@ function getSelectionPosition () {
 var start_all_time;
 var end_all_time;
 var focusHandler = function() {
-    console.log("Focus");
+//    console.log("Focus");
     timer.start();
     start_all_time = new Date().getTime()/1000.0;
 }
 var blurHandler = function() {
-    console.log("Focus End");
+//    console.log("Focus End");
     end_all_time = new Date().getTime()/1000.0;
     timer.stop();
     timer.reset();
@@ -140,85 +159,119 @@ setInterval(() => {
 }, 100)
 
 //--------------------------->
+//https://stackoverflow.com/questions/3972014/get-contenteditable-caret-position
 var tKey = {}
+
+function getCaret() {
+  const editable = document.getElementById('text_input');
+  // collapse selection to end
+  window.getSelection().collapseToEnd();
+
+  const sel = window.getSelection();
+  const range = sel.getRangeAt(0);
+
+  // get anchor node if startContainer parent is editable
+  let selectedNode = editable === range.startContainer.parentNode
+    ? sel.anchorNode 
+    : range.startContainer.parentNode;
+
+  if (!selectedNode) {
+    console.log(`caret: 0, line: 0`);
+    return;
+  }
+
+  // select to top of editable
+  if (editable.firstChild) {
+    range.setStart(editable.firstChild, 0);
+  }
+
+  // do not use 'this' sel anymore since the selection has changed
+  const content = window.getSelection().toString();
+  const text = JSON.stringify(content);
+  const lines = (text.match(/\\n/g) || []).length;
+
+  // clear selection
+  window.getSelection().collapseToEnd();
+  idx_line = lines;
+}
+
+
+var idx_line = 0;
 function handle(e) {
-    if (e.type == "click") {
-        getSelectionPosition ();
-//        console.log("WALL KEYPRESS", e, e.type, e.anchorOffset);
-    }
+    document.getElementById("show_value").innerHTML = text_input.innerHTML;
+    document.getElementById("count_text").innerHTML = arr.length;
+//    getSelectionPosition(); //text_input.textContent
+    getCaret();
+    idx_arr = getCaretCharOffset(e.target)+idx_line;
+//    console.log("Start--->", idx_arr);
     if (list_exept.indexOf(e.key) == -1) {
         if (e.type == "keydown") {
             if (e.key=="Backspace") {
-                if (arr.length!=0 && idx_arr>0 ) {
+//              arr.length!=0 &&     
+                if (arr.length!=0 && idx_arr!=0) {
+//                if (text_input.innerText.length >=0) {
                     idx_arr--;
                     arr.splice(idx_arr, 1);
                     document.getElementById("count_text").innerHTML = arr.length;  
-                    let value_pure = '';
-                    for (var i = 0; i < arr.length; i++) {
-                        value_pure += arr[i].key_name;
-                    }
-                    document.getElementById("show_value").innerHTML = value_pure;
+//                    console.log("Backspace", arr, idx_arr);
                 }
-                 
-                //`<div class="value_pure">${text_input.innerText}</div>`;
-            } else if (e.key=="ArrowLeft") {
-                if (idx_arr > 0) {
-                    idx_arr--;
-                }
-            } else if (e.key=="ArrowRight") { 
-                if (arr.length>idx_arr) {
-                    idx_arr++;
-                }         
+            } else if (e.key == "ArrowRight") {   
+            } else if (e.key == "ArrowLeft") {  
+            } else if (e.key == "ArrowUp") {  
+            } else if (e.key == "ArrowDown") {   
             } else {
                 //-------------------------------->
                 var keyTimes = {};
-                keyTimes["key_code"] = e.keyCode;
+                //keyTimes["key_code"] = e.keyCode;
                 let K;
-                if (e.key =="Enter") { K = " " } else { K = e.key };
+                if (e.key =="Enter") { K = "\n"} else { K = e.key };
                 keyTimes["key_name"] = K;
                 keyTimes["time_keydown"] = new Date().getTime()/1000.0;
-                //arr.push(keyTimes); 
+                keyTimes["time_keyup"] = new Date().getTime()/1000.0;
                 arr.splice(idx_arr, 0, keyTimes);
+//                arr.push(keyTimes);
                 if (!tKey[e.key]) {
                     tKey[e.key] = [idx_arr];
                 } else {
                     tKey[e.key].push(idx_arr);
                 }
-                //show_value.innerHTML = text_input.innerHTML   
-                document.getElementById("show_value").innerHTML += K;
-                document.getElementById("count_text").innerHTML = arr.length;                   
-                idx_arr++  
-                console.log(e.key, list_exept.indexOf(e.key), keyTimes, arr.length, text_input.innerText.length);
             }
+//            console.log("KEYDOWN", e.key, arr.length, text_input.innerText.length, idx_arr);
+        }
+        if (e.type == "keypress") {
+            //console.log("KEYPRESS", e.key, arr.length, text_input.innerText.length);
         }
         if (e.type == "keyup") {
             if (arr.length>0) {
                 let time_up = new Date().getTime()/1000.0;
-                try {
+                if (tKey[e.key]) {
                     for (var i = 0; i < tKey[e.key].length; i++) {
                         let rev_idx = (tKey[e.key].length-1)-i;
                         arr[tKey[e.key][i]]["time_keyup"] = time_up;
                         arr[tKey[e.key][i]]["time_press"] = time_up - arr[tKey[e.key][rev_idx]]["time_keydown"];
                     }
                     delete tKey[e.key];
-                } catch (e) {}
+                }
             }
+            console.log("KEYUP", e.key, arr.length, idx_arr, idx_line);
         }
-//        if (arr.length == text_input.innerText.length) {
-//            var value_pure = "";
-//            for (var i = 0; i < arr.length; i++) {
-//                value_pure += arr[i].key_name;
-//            }
-//            
-//            show_value.innerHTML = text_input.innerHTML;
-////            show_value.innerHTML =`<div class="value_pure">${value_pure}</div>`;
-////            show_value.innerHTML =`<div class="value_pure">${text_input.innerText}</div>`;
-//            count_text.innerHTML = arr.length; 
-//            console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure,
-//                        text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.trim());
-//        }
     }
 }
+
+
+
+function send_for_log(self) {
+    
+    let value_pure = '';
+    for (var i = 0; i < arr.length; i++) {
+        value_pure += arr[i].key_name;
+    }
+    console.log(arr, text_input.innerText, value_pure, idx_arr)
+    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
+                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
+}
+
+//--------------------------------->
 
 function recording_key() {
     console.log('tick', arr)
@@ -625,47 +678,47 @@ function send_for_reg(self) {
 }
 
 // вход шаг 2
-function send_for_log(self) {
-    var crsv = getCookie('csrftoken'); // токен
-    let data = JSON.stringify({'KEYPRESS': arr,
-                               'text':text_input.innerText}); 
-    // console.log("SEND_FOR_REG", crsv, data);   
-    var http = createRequestObject();
-    var linkfull = '/loginend/';
-    if (http) {
-        http.open('post', linkfull);
-        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-        http.setRequestHeader('X-CSRFToken', crsv);
-        http.onreadystatechange = function () {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
-                    document.getElementById("show_value").removeChild(t_el);
-                    var data = JSON.parse(http.responseText);
-                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
-                    document.getElementById("blockup").innerHTML = `<div id="node">
-                                    <br>
-                                    ${data["html"]}
-                                    <br>
-                                    <button onclick="close_div()">close</button>
-                                </div>`
-                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
-                    document.getElementById("blockup").style.display = "block";
-                    document.body.style.overflow = 'hidden';
-                    //window.location.replace("/");
-                }
-            }
-        }
-        let data = JSON.stringify({'KEYPRESS': arr,
-                                   'text':text_input.innerText});
-        document.getElementById("show_value").appendChild(t_el);
-//        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
-//        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
-//        console.log(S, S1, S===S1);
-//        console.log(text_input.innerHTML, document.getElementById("block_post").innerHTML);  
-//        console.log(text_input.innerText.normalize().length, text_input.innerText.length);                          
-//        console.log(text_input.innerText===document.getElementById("block_post").innerText)                           
-                                   
-        http.send(data);  
-    }
-}
+//function send_for_log(self) {
+//    var crsv = getCookie('csrftoken'); // токен
+//    let data = JSON.stringify({'KEYPRESS': arr,
+//                               'text':text_input.innerText}); 
+//    // console.log("SEND_FOR_REG", crsv, data);   
+//    var http = createRequestObject();
+//    var linkfull = '/loginend/';
+//    if (http) {
+//        http.open('post', linkfull);
+//        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+//        http.setRequestHeader('X-CSRFToken', crsv);
+//        http.onreadystatechange = function () {
+//            if (http.readyState == 4) {
+//                if (http.status == 200) {
+//                    document.getElementById("show_value").removeChild(t_el);
+//                    var data = JSON.parse(http.responseText);
+//                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
+//                    document.getElementById("blockup").innerHTML = `<div id="node">
+//                                    <br>
+//                                    ${data["html"]}
+//                                    <br>
+//                                    <button onclick="close_div()">close</button>
+//                                </div>`
+//                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+//                    document.getElementById("blockup").style.display = "block";
+//                    document.body.style.overflow = 'hidden';
+//                    //window.location.replace("/");
+//                }
+//            }
+//        }
+//        let data = JSON.stringify({'KEYPRESS': arr,
+//                                   'text':text_input.innerText});
+//        document.getElementById("show_value").appendChild(t_el);
+////        let S = text_input.innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+////        let S1 = document.getElementById("block_post").innerHTML.replace(/<(.|\n)*?>/g, ' ').replace(/&nbsp;/g,' ').replace(/ /g, '');
+////        console.log(S, S1, S===S1);
+////        console.log(text_input.innerHTML, document.getElementById("block_post").innerHTML);  
+////        console.log(text_input.innerText.normalize().length, text_input.innerText.length);                          
+////        console.log(text_input.innerText===document.getElementById("block_post").innerText)                           
+//                                   
+//        http.send(data);  
+//    }
+//}
 
