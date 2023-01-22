@@ -605,3 +605,7 @@ img#bar_p {
     padding: 10px;
     margin:10px;
 }
+.highlight {
+   background-color: yellow;
+ }
+
