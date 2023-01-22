@@ -292,9 +292,9 @@ function repl (match) {
     return span.outerHTML;
 }
 
+var temp_text_line;
 //------------------------------------------>
 var idx_line = 0;
-
 function handle(e) {
     document.getElementById("show_value").innerHTML = text_input.innerHTML;
     document.getElementById("count_text").innerHTML = arr.length;
@@ -302,6 +302,7 @@ function handle(e) {
     getCaret();
     idx_arr = getCaretCharOffset(e.target)+idx_line;
     var charCode = e.which || e.keyCode;
+    let textNew = textOriginal;
 //    console.log("Start--->", idx_arr);
     if (list_exept.indexOf(e.key) == -1) {
         if (e.type == "keydown") {
@@ -310,9 +311,30 @@ function handle(e) {
                 if (arr.length!=0 && idx_arr!=0) {
 //                if (text_input.innerText.length >=0) {
                     idx_arr--;
+                    // WORK
+//                    console.log("Backspace", idx_arr, arr[idx_arr], textOriginal[idx_arr-1]);
+//                    if (textOriginal[idx_arr]===arr[idx_arr].key_name) {
+//                        if (idx_arr==0){
+//                            bp.innerHTML = textNew.replace(textOriginal[idx_arr-1], arr[idx_arr].key_name);
+//                        } else {
+//                            bp.innerHTML = textOriginal.slice(0, idx_arr-1) +textNew.substr(idx_arr-1).replace(textOriginal[idx_arr-1], repl);
+//                            //bp.innerHTML = textNew.replace(textOriginal[idx_arr-1], repl);
+//                        }
+//                        
+//                    }
+
+                    // WORK
+                    if (textOriginal[idx_arr]===arr[idx_arr].key_name) {
+                        temp_text_line = repl(textOriginal.slice(0, idx_arr));
+                        console.log(temp_text_line);
+                        bp.innerHTML = temp_text_line+textNew.substr(idx_arr);
+                        
+                    }
+
+                    //
                     arr.splice(idx_arr, 1);
                     document.getElementById("count_text").innerHTML = arr.length;  
-//                    console.log("Backspace", arr, idx_arr);
+
                 }
             } else if (e.key == "ArrowRight") {   
             } else if (e.key == "ArrowLeft") {  
@@ -345,33 +367,41 @@ function handle(e) {
         if (e.type == "keypress") {
             
             if (textOriginal[idx_arr]===String.fromCharCode(charCode)) {
-                console.log(bp.innerHTML[idx_arr], String.fromCharCode(charCode));
-//                bp.innerHTML = textNew.replace(textOriginal[idx_arr], repl);
-                let searchKey = text_input.textContent;
-                let regExp = new RegExp(searchKey == '\\' ? '' : searchKey, 'gi');
-                let textNew = textOriginal;
-                // Если нет совпадений в тексте
-                if (!regExp.test(textOriginal)) {
-                 if (hasChanges) {
-                   hasChanges = false;
-                     bp.innerHTML = textNew;
-                 }
-                 return true;
-                }
-                hasChanges = true;
-                function repl (match) {
-                 span.innerHTML = match;
-                 return span.outerHTML;
-                }
-                if(text_input.innerText.trim() === "" ) {
-                  bp.innerHTML = textNew;
-                }
-                else {
-                  bp.innerHTML = textNew.replace(regExp, repl);
-                }
+            
+                console.log(textOriginal.slice(0, idx_arr));
+                temp_text_line = repl(textOriginal.slice(0, idx_arr+1));
+                bp.innerHTML = temp_text_line+textNew.substr(idx_arr+1);
+
+                //// WORK
+//                console.log(textOriginal.slice(0, idx_arr));
+//                bp.innerHTML = textOriginal.slice(0, idx_arr) + textNew.substr(idx_arr).replace(textOriginal[idx_arr], repl);
+
+                //// WOKK
+//                let searchKey = text_input.textContent;
+//                let regExp = new RegExp(searchKey == '\\' ? '' : searchKey, 'gi');
+//                let textNew = textOriginal;
+//                // Если нет совпадений в тексте
+//                if (!regExp.test(textOriginal)) {
+//                 if (hasChanges) {
+//                   hasChanges = false;
+//                     bp.innerHTML = textNew;
+//                 }
+//                 return true;
+//                }
+//                hasChanges = true;
+//                function repl (match) {
+//                 span.innerHTML = match;
+//                 return span.outerHTML;
+//                }
+//                if(text_input.innerText.trim() === "" ) {
+//                  bp.innerHTML = textNew;
+//                }
+//                else {
+//                  bp.innerHTML = textNew.replace(regExp, repl);
+//                }
 
 
-            }
+            } 
 //            document.getElementById("show_value").innerHTML = text_input.innerHTML;
 //            console.log("KEYPRESS", e.key, arr.length, text_input.innerText.length);
         }
