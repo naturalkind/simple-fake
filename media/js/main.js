@@ -292,7 +292,9 @@ function repl (match) {
     return span.outerHTML;
 }
 
+document.getElementById("count_text_our").innerText = textOriginal.length;
 var temp_text_line;
+var P_string = 0;
 //------------------------------------------>
 var idx_line = 0;
 function handle(e) {
@@ -303,6 +305,7 @@ function handle(e) {
     idx_arr = getCaretCharOffset(e.target)+idx_line;
     var charCode = e.which || e.keyCode;
     let textNew = textOriginal;
+    
 //    console.log("Start--->", idx_arr);
     if (list_exept.indexOf(e.key) == -1) {
         if (e.type == "keydown") {
@@ -368,10 +371,13 @@ function handle(e) {
             
             if (textOriginal[idx_arr]===String.fromCharCode(charCode)) {
             
-                console.log(textOriginal.slice(0, idx_arr));
+                console.log(textOriginal.slice(0, idx_arr+1));
                 temp_text_line = repl(textOriginal.slice(0, idx_arr+1));
                 bp.innerHTML = temp_text_line+textNew.substr(idx_arr+1);
 
+                P_string = (textOriginal.slice(0, idx_arr+1).length*100)/textNew.length;
+                document.getElementById("count_text_per").innerText = P_string.toFixed(1);
+                
                 //// WORK
 //                console.log(textOriginal.slice(0, idx_arr));
 //                bp.innerHTML = textOriginal.slice(0, idx_arr) + textNew.substr(idx_arr).replace(textOriginal[idx_arr], repl);

@@ -583,6 +583,8 @@ button#quit {
 
 div#block_post {
     padding: 15px;
+    color: white;
+/*    font-family: monospace;*/
 }
 
 img#bar_p {
@@ -607,5 +609,15 @@ img#bar_p {
 }
 .highlight {
    background-color: yellow;
- }
+   color: black;
+}
+ 
+div#show_value {
+    color: #ffff38;
+    font-weight: bold;
+/*    font-family: monospace;*/
+}
+h3#user_log {
+    color: white;
+}
 
