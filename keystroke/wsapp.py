@@ -277,6 +277,8 @@ class B_Handler(AsyncJsonWebsocketConsumer):
         #----------------------->
 #        self.Z = np.zeros((len(abc_), 1))
 #        self.Z_pad = np.zeros((len(abc_), 1))
+            self.idx_enter = 0
+            self.temp_len_text = 0
         #----------------------->
             
         print ("CHANNEL_LAYERS", self.channel_name, self.room_group_name, self.scope['user']) #self.scope, 
@@ -302,13 +304,40 @@ class B_Handler(AsyncJsonWebsocketConsumer):
         """
         
         response = json.loads(text_data)
-        print (response, self.scope['user'])
+#        print (response, self.scope['user'])
         event = response.get("event", None)
         if self.scope['user'].is_authenticated:  
             # KEYSTROKE
             if event == "KEYPRESS":
-                #print (event)
-                pass
+#                print (response)
+#                pass
+                arr = response["KEYPRESS"]
+                arr_bad = response["KEYPRESS_BAD"]
+                div_temp = ""
+                for ix, i in enumerate(arr):
+                    self.temp_len_text = ix
+                    if i['key_name'] == " ":
+                        for ii in arr_bad:
+                            if ii[0] == "Alt":
+                                if ii[1]==ix or ii[1]==(ix+1) or ii[1]==(ix-1):
+                                    self.idx_enter += 1
+                
+                print (self.temp_len_text, self.idx_enter)
+                if self.idx_enter>2:
+                    div_temp += f'<br>Hello, {self.sender_name}<br>'
+                else:
+                    div_temp += f'<br>ERROR, you are not {self.sender_name}<br>'
+                if self.temp_len_text > 20:
+                
+                    _data={
+                            "type": "wallpost",
+                            "user_post": self.sender_name.username,
+                            "status" : "Done",
+                            "html": div_temp
+                        }
+                    await self.channel_layer.group_send(self.room_group_name, _data)                     
+
+
             if event == "send_test":
                 """
                 сохраняю с помощью orm django

@@ -154,23 +154,24 @@ def registrationend(request):
     else:
         return render(request, 'createpost.html', registration)
 
-#def login(request):
-#    args = {}
-#    args.update(csrf(request))
-#    args['username'] = auth.get_user(request)
-#    #print (request, request.POST)
-#    if request.POST:
-#        username = request.POST.get('username','')
-#        password = request.POST.get('password','')
-#        user = auth.authenticate(username=username,password=password)
-#        if user is not None:
-#            auth.login(request, user)
-#            return redirect('/')
-#        else:
-#            args['login_error']= 'Пользователь не найден'
-#            return render(request, 'login.html',args)
-#    else:
-#        return render(request, 'login.html', args)
+# старая версия
+def login(request):
+    args = {}
+    args.update(csrf(request))
+    args['username'] = auth.get_user(request)
+    #print (request, request.POST)
+    if request.POST:
+        username = request.POST.get('username','')
+        password = request.POST.get('password','')
+        user = auth.authenticate(username=username,password=password)
+        if user is not None:
+            auth.login(request, user)
+            return redirect('/')
+        else:
+            args['login_error']= 'Пользователь не найден'
+            return render(request, 'login.html',args)
+    else:
+        return render(request, 'login.html', args)
 
 # новая функция бутстреп для косинуса угла между векторами
 def get_bootstrap_cos(data_1, # числовые значения первой выборки
@@ -282,30 +283,30 @@ def time_pair(JS):
 
 
 # вход новая версия
-def login(request):
-    args = {}
-    args.update(csrf(request))
-    args['username'] = auth.get_user(request)
-    
-    #print (request, request.POST)
-    if request.POST:
-        username = request.POST.get('username','')
-        password = request.POST.get('password','')
-        user = auth.authenticate(username=username,password=password)
-        print (user)
-        if user is not None:
-            request.session['login'] = request.POST
-            return HttpResponseRedirect('/loginend')
-        else:
-            t = loader.get_template('login.html')
-            template = Template('{%extends "' + "base.html" + '"%} ...'+t.template.source)
-            context = Context(args)
-            result = template.render(context)
-            return HttpResponse(result)
-            
-    else:
-        args['base'] = ""
-        return render(request, 'login.html', args)
+#def login(request):
+#    args = {}
+#    args.update(csrf(request))
+#    args['username'] = auth.get_user(request)
+#    
+#    #print (request, request.POST)
+#    if request.POST:
+#        username = request.POST.get('username','')
+#        password = request.POST.get('password','')
+#        user = auth.authenticate(username=username,password=password)
+#        print (user)
+#        if user is not None:
+#            request.session['login'] = request.POST
+#            return HttpResponseRedirect('/loginend')
+#        else:
+#            t = loader.get_template('login.html')
+#            template = Template('{%extends "' + "base.html" + '"%} ...'+t.template.source)
+#            context = Context(args)
+#            result = template.render(context)
+#            return HttpResponse(result)
+#            
+#    else:
+#        args['base'] = ""
+#        return render(request, 'login.html', args)
 
 
 #1/(1+е(-ln(p-value/0.05)). 
@@ -315,6 +316,92 @@ def sigmoid(z):
     return 1/(1 + np.exp(-z))
     
    
+# WORK
+
+#def loginend(request):
+#    login = request.session.get('login')
+#    
+#    if login:
+#        username = login['username']
+#        password = login['password']
+#        user = auth.authenticate(username=username,password=password)
+#        if request.body:
+#            json_data = json.loads(request.body)
+#            if user is not None:
+#                #print ("......", login, json_data)
+#                # данные полученные для проверки
+#                T0 = json_data['text']
+#                dt0 = time_pair(json_data["KEYPRESS"])
+#                p0 = set(dt0['pair'].values)  
+
+#                posts = list(Post.objects.filter(status="y"))
+#    #                for_all_data = {}
+#                for_all_data = []
+#                div_out = ""
+#                for post_ in posts:
+#                    T1 = post_.text
+#                    dt1 = time_pair(post_.pure_data)
+#                    p1 = set(dt1['pair'].values)
+#                    pair_all = list(p0 & p1)
+#                    #print ("ONE----->", pair_all, len(T0), len(T1))
+#                    test_list = []
+#                    test_list = def_boot_cos(dt0, dt1, pair_all, test_list)
+#                    sig = sigmoid(test_list[0][1])
+#                    #sig = sig/(sig+0.05)
+#                    print ("TWO----->", test_list[0], sig)
+#    #                    for_all_data[post.user_post.id] = sig
+#    #                    for_all_data.append([post_.user_post.id, sig])
+#                    for_all_data.append([post_.user_post.username, sig])  
+#                div_out += f"REQUEST USER: {user.username}, {user.id}"
+#                #------------------------------------------------------->
+#                # аутентификация
+#                auth.login(request, user)  
+#                # создания текста при регистрации
+#                T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
+#                post = Post()
+#                post.pure_data = json_data["KEYPRESS"]
+#                post.text = T
+#                post.user_post = user
+#                post.save()
+#                #------------------------------------------------------->
+#                if for_all_data:
+#                    # Визуализация
+#                    dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
+#                    fig, ax = plt.subplots(figsize=(9,6))
+#                    g = sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
+#                    ax.set_title("Histogram of p-value users")
+#                    dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
+#                    for index, data in enumerate(dataset_["value"].tolist()):
+#                        plt.text(x = index-.25, y = data, s = f"{data}")
+#                    plt.tight_layout()
+
+#    #                ax.bar_label(dataset_["value"].tolist()) matplotlib v3.4+
+#                    figdata = io.BytesIO()
+#                    fig.savefig(figdata, format='png')
+#                    figdata_png = base64.b64encode(figdata.getvalue()).decode()
+#                    div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
+#    #                plt.show()                
+#                    
+#  
+#                    return JsonResponse({"user":f'{user.username}',
+#                                         "html": div_out})                
+#                else:
+#                    div_out += f'<br>ERROR, no data to compare, {user.username} enter'
+#                    return JsonResponse({"user":f'{user.username}',
+#                                         "html": div_out})            
+#        else:
+#            login = {}
+#            login["user_"] = user.username
+#            try:
+#                login["post_"] = Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text
+#                return render(request, 'createpost_log.html', login)
+#            except IndexError:
+#                return render(request, 'createpost_log.html', login)
+#    else:
+#        return JsonResponse({"user": 'None',
+#                             "html": 'Error'})       
+
+#---------------------------------------------->
 
 def loginend(request):
     login = request.session.get('login')
@@ -328,65 +415,25 @@ def loginend(request):
             if user is not None:
                 #print ("......", login, json_data)
                 # данные полученные для проверки
-                T0 = json_data['text']
-                dt0 = time_pair(json_data["KEYPRESS"])
-                p0 = set(dt0['pair'].values)  
-
-                posts = list(Post.objects.filter(status="y"))
-    #                for_all_data = {}
-                for_all_data = []
+                arr = json_data["KEYPRESS"]
+                arr_bad = json_data["KEYPRESS_BAD"]
                 div_out = ""
-                for post_ in posts:
-                    T1 = post_.text
-                    dt1 = time_pair(post_.pure_data)
-                    p1 = set(dt1['pair'].values)
-                    pair_all = list(p0 & p1)
-                    #print ("ONE----->", pair_all, len(T0), len(T1))
-                    test_list = []
-                    test_list = def_boot_cos(dt0, dt1, pair_all, test_list)
-                    sig = sigmoid(test_list[0][1])
-                    #sig = sig/(sig+0.05)
-                    print ("TWO----->", test_list[0], sig)
-    #                    for_all_data[post.user_post.id] = sig
-    #                    for_all_data.append([post_.user_post.id, sig])
-                    for_all_data.append([post_.user_post.username, sig])  
-                div_out += f"REQUEST USER: {user.username}, {user.id}"
-                #------------------------------------------------------->
+                idx_enter = 0
+                for ix, i in enumerate(arr):
+                    if i['key_name'] == " ":
+                        for ii in arr_bad:
+                            if ii[0] == "Alt":
+                                if ii[1]==ix or ii[1]==(ix+1) or ii[1]==(ix-1):
+                                    idx_enter += 1
+                if idx_enter>2:
+                    div_out += f'<br>Hello, {user.username}<br>'
+                else:
+                    div_out += f'<br>ERROR, you are not {user.username}<br>'
                 # аутентификация
                 auth.login(request, user)  
-                # создания текста при регистрации
-                T = json_data["text"].replace('\xa0', ' ').replace("\n\n", " ").replace("\n", " ").lower()
-                post = Post()
-                post.pure_data = json_data["KEYPRESS"]
-                post.text = T
-                post.user_post = user
-                post.save()
-                #------------------------------------------------------->
-                if for_all_data:
-                    # Визуализация
-                    dataset_ = pd.DataFrame(for_all_data, columns=['users_id', 'value'])
-                    fig, ax = plt.subplots(figsize=(9,6))
-                    g = sns.barplot(x='users_id', y='value', data=dataset_, ci=95, ax=ax)
-                    ax.set_title("Histogram of p-value users")
-                    dataset_["value"] = dataset_["value"].apply(lambda x: round(x, 4))
-                    for index, data in enumerate(dataset_["value"].tolist()):
-                        plt.text(x = index-.25, y = data, s = f"{data}")
-                    plt.tight_layout()
-
-    #                ax.bar_label(dataset_["value"].tolist()) matplotlib v3.4+
-                    figdata = io.BytesIO()
-                    fig.savefig(figdata, format='png')
-                    figdata_png = base64.b64encode(figdata.getvalue()).decode()
-                    div_out += f'<img id="bar_p" src="data:image/png;base64, {figdata_png}"/>'
-    #                plt.show()                
-                    
-  
-                    return JsonResponse({"user":f'{user.username}',
-                                         "html": div_out})                
-                else:
-                    div_out += f'<br>ERROR, no data to compare, {user.username} enter'
-                    return JsonResponse({"user":f'{user.username}',
-                                         "html": div_out})            
+                #div_out += f'<br>ERROR, no data to compare, {user.username} enter'
+                return JsonResponse({"user":f'{user.username}',
+                                     "html": div_out})            
         else:
             login = {}
             login["user_"] = user.username
@@ -397,7 +444,10 @@ def loginend(request):
                 return render(request, 'createpost_log.html', login)
     else:
         return JsonResponse({"user": 'None',
-                             "html": 'Error'})        
+                             "html": 'Error'})    
+
+                             
+#--------------------------------->                              
 #        try:
 #            login = {"post_" :Post.objects.filter(user_post__username="unkind", text_to_test="y")[0].text}  
 #            return render(request, 'createpost_log.html', login)

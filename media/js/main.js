@@ -42,6 +42,8 @@ document.getElementById("testbox").appendChild(idk_block);
 var text_input = document.getElementById("text_input");
 
 var arr = [];
+
+var arr_bad = [];
 //"Backspace", "ArrowLeft", "ArrowRight", 
 list_exept = ["CapsLock", "Alt", "Control", "Shift", "Insert"]
 // подготовка текста к отправке на сервер
@@ -229,6 +231,7 @@ var P_string = 0;
 var idx_line = 0;
 var searchKey = "";
 
+
 function handle(e) {
     document.getElementById("show_value").innerHTML = text_input.innerHTML;
     document.getElementById("count_text").innerHTML = arr.length;
@@ -360,28 +363,37 @@ function handle(e) {
             }
 //            console.log("KEYUP", e.key, arr.length, idx_arr, idx_line);
         }
+    } else {
+        if (e.type == "keydown") {
+            arr_bad.push([e.key, idx_arr]);
+        }
+//        console.log(e.key, idx_arr);
     }
 }
 
 
 
-function send_for_log(self) {
-    let value_pure = '';
-    for (var i = 0; i < arr.length; i++) {
-        value_pure += arr[i].key_name;
-    }
-    
-    console.log(arr, text_input.innerText, value_pure, idx_arr)
-    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
-                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
-}
+//function send_for_log(self) {
+//    let value_pure = '';
+//    for (var i = 0; i < arr.length; i++) {
+//        value_pure += arr[i].key_name;
+//    }
+//    
+//    console.log(arr, text_input.innerText, value_pure, idx_arr, arr_bad)
+//    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
+//                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
+//}
 
 //--------------------------------->
 
 function recording_key() {
     console.log('tick', arr)
-    ws.send(JSON.stringify({'KEYPRESS': arr}));
-    arr.length = 0 // удаляет все
+    let data = JSON.stringify({'event':'KEYPRESS',
+                               'KEYPRESS': arr,
+                               'KEYPRESS_BAD': arr_bad,
+                               'text':text_input.innerText});    
+    ws.send(data);
+    //arr.length = 0 // удаляет все
     //arr = []; // удаляет все
     //keyTimes = {}; // удаляет все
 }
@@ -485,9 +497,9 @@ function getText(self) {
 
 
 // тестирование гипотиез
-function TESTKEY(self) {
-    console.log(self)
-}
+//function TESTKEY(self) {
+//    console.log(self)
+//}
 
 // страница пользователя
 function USER(self, id) {
@@ -549,7 +561,7 @@ function KEYSTROKE(self) {
     document.getElementsByClassName("testbox")[0].style.width = "740px";
     document.getElementById("logo24").style.display = "none";
     // отправлять каждую секунду данные
-    //setInterval(recording_key, 1000);
+    setInterval(recording_key, 1000);
 };
 
 // регистрация 
@@ -735,9 +747,10 @@ ws.onopen = function() {
 };
 
 ws.onmessage = function(data) {
-    show_value.removeChild(t_el);
+//    show_value.removeChild(t_el);
     var message_data = JSON.parse(data.data);
     if (message_data["status"] == "send_test") {
+        show_value.removeChild(t_el);
         console.log(message_data, block_post);
 //        block_post.innerHTML += `<button type="button" onclick="see_data(this)" 
 //                                         indicator="send" class="Button" 
@@ -751,6 +764,7 @@ ws.onmessage = function(data) {
                                          Посмотреть статисику поста #${message_data["post_id"]}, 
                                          пользователя ${message_data["user_post"]}</button>`
     } else if (message_data["status"] == "send_test_p") {
+        show_value.removeChild(t_el);
         blockup.innerHTML = `<div id="node">
                                         <br>
                                         ${message_data["html"]}
@@ -760,7 +774,14 @@ ws.onmessage = function(data) {
         blockup.style.display = "block";
         document.body.style.overflow = 'hidden';
     } else if (message_data["status"]=="Done") { 
-        
+        blockup.innerHTML = `<div id="node">
+                                        <br>
+                                        ${message_data["html"]}
+                                        <br>
+                                        <button onclick="close_div()">close</button>
+                                    </div>`        
+        blockup.style.display = "block";
+        document.body.style.overflow = 'hidden';
     }
         
 };
@@ -824,6 +845,7 @@ function send_for_reg(self) {
 //            }
 //        }
 //        let data = JSON.stringify({'KEYPRESS': arr,
+//                                   'KEYPRESS_BAD': arr_bad,
 //                                   'text':text_input.innerText});
 //        document.getElementById("show_value").appendChild(t_el);
 //        let value_pure = '';
@@ -837,4 +859,46 @@ function send_for_reg(self) {
 //        }
 //    }
 //}
+
+
+//--------------------------------------->
+function send_for_log(self) {
+    var crsv = getCookie('csrftoken'); // токен
+    let data = JSON.stringify({'KEYPRESS': arr,
+                               'text':text_input.innerText}); 
+    // console.log("SEND_FOR_REG", crsv, data);   
+    var http = createRequestObject();
+    var linkfull = '/loginend/';
+    if (http) {
+        http.open('post', linkfull);
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('X-CSRFToken', crsv);
+        http.onreadystatechange = function () {
+            if (http.readyState == 4) {
+                if (http.status == 200) {
+                    document.getElementById("show_value").removeChild(t_el);
+                    var data = JSON.parse(http.responseText);
+                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
+                    document.getElementById("blockup").innerHTML = `<div id="node">
+                                    <br>
+                                    ${data["html"]}
+                                    <br>
+                                    <button onclick="close_div()">close</button>
+                                </div>`
+                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+                    document.getElementById("blockup").style.display = "block";
+                    document.body.style.overflow = 'hidden';
+                    //window.location.replace("/");
+                }
+            }
+        }
+        let data = JSON.stringify({'KEYPRESS': arr,
+                                   'KEYPRESS_BAD': arr_bad,
+                                   'text':text_input.innerText});
+        document.getElementById("show_value").appendChild(t_el);
+        http.send(data); 
+    }
+}
+
+
 
