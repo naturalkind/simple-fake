@@ -210,78 +210,6 @@ function getCaret() {
 }
 //------------------------------------------>
 
-//var $input = $("#input");
-//var $text = $(".text");
-//// Сохраним изначальный текст
-//var textOriginal = $text.text();
-//// Элемент, который задаст стили для выделения
-//var $span = $('<span class="highlight">');
-//// Было ли уже выделение в тексте
-//var hasChanges = false;
-
-//$input.on('input', function(e) {
-//  var searchKey = $input.val();
-//  // Можно обернуть в try{} catch, но так быстрее. Если в регулярке только один
-//  // один символ '\', то RegExp выбрасывает ошибку
-//  var regExp = new RegExp(searchKey == '\\' ? '' : searchKey, 'gi');
-//  var textNew = textOriginal;
-
-//  // Если нет совпадений в тексте
-//  if (!regExp.test(textOriginal)) {
-//    if (hasChanges) {
-//      hasChanges = false;
-//      $text.text(textNew);
-//    }
-
-//    return true;
-//  }
-
-//  hasChanges = true;
-//  $text.html(textNew.replace(regExp, function(match) {
-//    $span.text(match);
-//    return $span[0].outerHTML;
-//  }));
-//});
-
-
-
-//window.addEventListener('DOMContentLoaded', function() { 
-// let input = document.getElementById('text_input');
-// let text = document.getElementById('block_post');
-// // Сохраним изначальный текст
-// let textOriginal = text.textContent;
-// let span = document.createElement('span');
-// span.classList.add('highlight');
-// // Было ли уже выделение в тексте
-// let hasChanges = false; 
-// input.addEventListener('input', function () { 
-//   let searchKey = input.value;
-//   // Можно обернуть в try{} catch, но так быстрее. Если в регулярке только один
-//   // один символ '\', то RegExp выбрасывает ошибку
-//   let regExp = new RegExp(searchKey == '\\' ? '' : searchKey, 'gi');
-//   let textNew = textOriginal;
-//   // Если нет совпадений в тексте
-//   if (!regExp.test(textOriginal)) {
-//     if (hasChanges) {
-//       hasChanges = false;
-//         text.innerHTML = textNew;
-//     }
-//     return true;
-//   }
-//   hasChanges = true;
-//   function repl (match) {
-//     span.innerHTML = match;
-//     return span.outerHTML;
-//   }
-//   if(input.innerText.trim() === "" ) {
-//      text.innerHTML = textNew;
-//   }
-//   else {
-//      text.innerHTML = textNew.replace(regExp, repl);
-//   }
-//  });
-//});
-
 let bp = document.getElementById("block_post");
 let textOriginal = bp.textContent;
 
@@ -299,6 +227,8 @@ var temp_text_line;
 var P_string = 0;
 //------------------------------------------>
 var idx_line = 0;
+var searchKey = "";
+
 function handle(e) {
     document.getElementById("show_value").innerHTML = text_input.innerHTML;
     document.getElementById("count_text").innerHTML = arr.length;
@@ -331,6 +261,7 @@ function handle(e) {
 
                     // WORK
                     if (textOriginal[idx_arr]===arr[idx_arr].key_name) {
+                        searchKey = textOriginal.slice(0, idx_arr);
                         temp_text_line = repl(textOriginal.slice(0, idx_arr));
                         console.log(temp_text_line);
                         bp.innerHTML = temp_text_line+textNew.substr(idx_arr);
@@ -371,16 +302,17 @@ function handle(e) {
 //            console.log("KEYDOWN", e.key, arr.length, text_input.innerText.length, idx_arr);
         }
         if (e.type == "keypress") {
-            
             if (textOriginal[idx_arr]===String.fromCharCode(charCode)) {
-            
-                console.log(textOriginal.slice(0, idx_arr+1));
-                temp_text_line = repl(textOriginal.slice(0, idx_arr+1));
-                bp.innerHTML = temp_text_line+textNew.substr(idx_arr+1);
+                searchKey += String.fromCharCode(charCode);
+                if (textOriginal.slice(0, idx_arr+1)===searchKey) {
+                    console.log(textOriginal.slice(0, idx_arr+1), searchKey);
+                    temp_text_line = repl(textOriginal.slice(0, idx_arr+1));
+                    bp.innerHTML = temp_text_line+textNew.substr(idx_arr+1);
 
-                P_string = (textOriginal.slice(0, idx_arr+1).length*100)/textNew.length;
-                document.getElementById("count_text_per").innerText = P_string.toFixed(1);
-                
+                    P_string = (textOriginal.slice(0, idx_arr+1).length*100)/textNew.length;
+                    document.getElementById("count_text_per").innerText = P_string.toFixed(1);
+                }
+
                 //// WORK
 //                console.log(textOriginal.slice(0, idx_arr));
 //                bp.innerHTML = textOriginal.slice(0, idx_arr) + textNew.substr(idx_arr).replace(textOriginal[idx_arr], repl);
@@ -433,16 +365,16 @@ function handle(e) {
 
 
 
-//function send_for_log(self) {
-//    let value_pure = '';
-//    for (var i = 0; i < arr.length; i++) {
-//        value_pure += arr[i].key_name;
-//    }
-//    
-//    console.log(arr, text_input.innerText, value_pure, idx_arr)
-//    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
-//                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
-//}
+function send_for_log(self) {
+    let value_pure = '';
+    for (var i = 0; i < arr.length; i++) {
+        value_pure += arr[i].key_name;
+    }
+    
+    console.log(arr, text_input.innerText, value_pure, idx_arr)
+    console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim(),
+                text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim());
+}
 
 //--------------------------------->
 
@@ -861,48 +793,48 @@ function send_for_reg(self) {
 }
 
 // вход шаг 2
-function send_for_log(self) {
-    var crsv = getCookie('csrftoken'); // токен
-    let data = JSON.stringify({'KEYPRESS': arr,
-                               'text':text_input.innerText}); 
-    // console.log("SEND_FOR_REG", crsv, data);   
-    var http = createRequestObject();
-    var linkfull = '/loginend/';
-    if (http) {
-        http.open('post', linkfull);
-        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-        http.setRequestHeader('X-CSRFToken', crsv);
-        http.onreadystatechange = function () {
-            if (http.readyState == 4) {
-                if (http.status == 200) {
-                    document.getElementById("show_value").removeChild(t_el);
-                    var data = JSON.parse(http.responseText);
-                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
-                    document.getElementById("blockup").innerHTML = `<div id="node">
-                                    <br>
-                                    ${data["html"]}
-                                    <br>
-                                    <button onclick="close_div()">close</button>
-                                </div>`
-                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
-                    document.getElementById("blockup").style.display = "block";
-                    document.body.style.overflow = 'hidden';
-                    //window.location.replace("/");
-                }
-            }
-        }
-        let data = JSON.stringify({'KEYPRESS': arr,
-                                   'text':text_input.innerText});
-        document.getElementById("show_value").appendChild(t_el);
-        let value_pure = '';
-        for (var i = 0; i < arr.length; i++) {
-            value_pure += arr[i].key_name;
-        }
-        if (text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim()) {
-            console.log(arr, text_input.innerText, value_pure, idx_arr)
-            console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim());
-            http.send(data);  
-        }
-    }
-}
+//function send_for_log(self) {
+//    var crsv = getCookie('csrftoken'); // токен
+//    let data = JSON.stringify({'KEYPRESS': arr,
+//                               'text':text_input.innerText}); 
+//    // console.log("SEND_FOR_REG", crsv, data);   
+//    var http = createRequestObject();
+//    var linkfull = '/loginend/';
+//    if (http) {
+//        http.open('post', linkfull);
+//        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+//        http.setRequestHeader('X-CSRFToken', crsv);
+//        http.onreadystatechange = function () {
+//            if (http.readyState == 4) {
+//                if (http.status == 200) {
+//                    document.getElementById("show_value").removeChild(t_el);
+//                    var data = JSON.parse(http.responseText);
+//                    document.getElementById("show_value").innerHTML = `<a href="/">HOME PAGE ${data["user"]}</a>`;
+//                    document.getElementById("blockup").innerHTML = `<div id="node">
+//                                    <br>
+//                                    ${data["html"]}
+//                                    <br>
+//                                    <button onclick="close_div()">close</button>
+//                                </div>`
+//                    //'<div id="node">' + http.responseText + '<a onclick="close_div()">закрыть</a></div>';
+//                    document.getElementById("blockup").style.display = "block";
+//                    document.body.style.overflow = 'hidden';
+//                    //window.location.replace("/");
+//                }
+//            }
+//        }
+//        let data = JSON.stringify({'KEYPRESS': arr,
+//                                   'text':text_input.innerText});
+//        document.getElementById("show_value").appendChild(t_el);
+//        let value_pure = '';
+//        for (var i = 0; i < arr.length; i++) {
+//            value_pure += arr[i].key_name;
+//        }
+//        if (text_input.innerText.replace(/\s+/g, ' ').trim() === value_pure.replace(/\s+/g, ' ').trim()) {
+//            console.log(arr, text_input.innerText, value_pure, idx_arr)
+//            console.log(text_input.innerText.replace(/\s+/g, ' ').trim(), "<---->", value_pure.replace(/\s+/g, ' ').trim());
+//            http.send(data);  
+//        }
+//    }
+//}
 
