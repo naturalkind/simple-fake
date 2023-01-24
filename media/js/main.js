@@ -15,14 +15,14 @@ idk_block.style.display = "none";
 idk_block.innerHTML = `<button type="button" 
                                id="see_posts" 
                                onclick="see_posts(this)" 
-                               indicator="close">SEE ALL DATAS</button>
+                               indicator="close"
+                               style="display:none;">SEE ALL DATAS</button>
                        <div id="block_post"></div>
                        <br>
                        <p>Elapsed time: <span id="time">0</span>s</p>
                        <p>Number of characters: <span id="count_text">0</span>
-                       from
-                       <span id="count_text_our">0</span></p>
-                       <p>Percentage of filling: <span id="count_text_per">0</span>%</p> 
+                       <span id="count_text_our" style="display:none;">0</span></p>
+                       <p style="display:none;">Percentage of filling: <span id="count_text_per">0</span>%</p> 
                        <h3>Enter message:</h3>
                        <br>
                        <div id="show_value"></div>
@@ -385,14 +385,17 @@ function handle(e) {
 //}
 
 //--------------------------------->
-
+var result_ = "start"
 function recording_key() {
     console.log('tick', arr)
     let data = JSON.stringify({'event':'KEYPRESS',
                                'KEYPRESS': arr,
                                'KEYPRESS_BAD': arr_bad,
-                               'text':text_input.innerText});    
-    ws.send(data);
+                               'text':text_input.innerText});   
+    if (result_ == "start") {
+        ws.send(data);
+    }
+    
     //arr.length = 0 // удаляет все
     //arr = []; // удаляет все
     //keyTimes = {}; // удаляет все
@@ -774,11 +777,13 @@ ws.onmessage = function(data) {
         blockup.style.display = "block";
         document.body.style.overflow = 'hidden';
     } else if (message_data["status"]=="Done") { 
+        if (message_data["result"]=="Done") {
+            result_ = "stop";
+        } 
         blockup.innerHTML = `<div id="node">
+                                        <div id="text_msg">${message_data["html"]}</div>
                                         <br>
-                                        ${message_data["html"]}
-                                        <br>
-                                        <button onclick="close_div()">close</button>
+                                        <button type='button' class='Button' onclick="close_div()">close</button>
                                     </div>`        
         blockup.style.display = "block";
         document.body.style.overflow = 'hidden';

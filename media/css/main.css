@@ -584,6 +584,7 @@ button#quit {
 div#block_post {
     padding: 15px;
     color: white;
+    display: none;
 /*    font-family: monospace;*/
 }
 
@@ -619,5 +620,15 @@ div#show_value {
 }
 h3#user_log {
     color: white;
+}
+div#text_msg {
+    color: black;
+    font-size: 26px;
+}
+span#user_msg {
+/*    color: #bfbfbf;*/
+    color: #507299;
+    font-weight: bold;
+    text-decoration: underline;
 }
 

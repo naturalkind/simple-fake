@@ -3,9 +3,9 @@
 {% if username.is_authenticated %}
 <!--LOGIN-->
 <button type='button' class='Button' id="idk_bt" onclick="KEYSTROKE(this)">USER IDENTIFICATION KEYSTROKE</button>
-<button type='button' class='Button' id="log_bt" onclick="CHANGEUSER(this)">CHANGE USER</button>
+<button type='button' class='Button' id="log_bt" onclick="CHANGEUSER(this)" style="display:none;">CHANGE USER</button>
 {% else %}
 <button type='button' class='Button' id="log_bt" onclick="CHANGEUSER(this)">ENTER</button>
-<button type='button' class='Button' id="reg_bt" onclick="REG(this)">REGISTRATION</button>
+<button type='button' class='Button' id="reg_bt" onclick="REG(this)" style="display:none;">REGISTRATION</button>
 {% endif %}
 {% endblock content %}

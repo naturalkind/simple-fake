@@ -279,6 +279,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
 #        self.Z_pad = np.zeros((len(abc_), 1))
             self.idx_enter = 0
             self.temp_len_text = 0
+            self.result_ = ""
         #----------------------->
             
         print ("CHANNEL_LAYERS", self.channel_name, self.room_group_name, self.scope['user']) #self.scope, 
@@ -324,15 +325,18 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                 
                 print (self.temp_len_text, self.idx_enter)
                 if self.idx_enter>2:
-                    div_temp += f'<br>Hello, {self.sender_name}<br>'
+                    self.result_ = "Done"
+                    div_temp += f'<br>Hello <span id="user_msg">{self.sender_name}</span>, test complete<br>'
                 else:
-                    div_temp += f'<br>ERROR, you are not {self.sender_name}<br>'
+                    div_temp += f'<br>ERROR, you are not <span id="user_msg">{self.sender_name}</span><br>'
+                    self.result_ = "Error"
                 if self.temp_len_text > 20:
                 
                     _data={
                             "type": "wallpost",
                             "user_post": self.sender_name.username,
                             "status" : "Done",
+                            "result": self.result_,
                             "html": div_temp
                         }
                     await self.channel_layer.group_send(self.room_group_name, _data)                     
