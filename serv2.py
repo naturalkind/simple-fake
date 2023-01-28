@@ -45,6 +45,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy import stats
 import tensorflow as tf
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8000"
 
 device = 'cuda'
 
@@ -210,7 +211,7 @@ def get_frames(video, batch_size=10, target_fps=1):
     if clip.audio.nchannels == 1:
         channel_audio = "mono"
     elif clip.audio.nchannels == 2:
-        channel_audio = "streo"
+        channel_audio = "stereo"
     
     global total
     total = clip.reader.nframes
@@ -537,23 +538,23 @@ class DataBase():
         return LS
 
 
-def deep_vector(x):
-       t_arr = np.expand_dims(x, axis=0)
-       processed_img = preprocess_idx(t_arr)
-       preds = model_idx.predict(processed_img)
-       return preds
+#def deep_vector(x):
+#       t_arr = np.expand_dims(x, axis=0)
+#       processed_img = preprocess_idx(t_arr)
+#       preds = model_idx.predict(processed_img)
+#       return preds
 
-def similarity(vector1, vector2):
-        return np.dot(vector1, vector2.T) / np.dot(np.linalg.norm(vector1, axis=1, keepdims=True),
-                                                   np.linalg.norm(vector2.T, axis=0, keepdims=True))
-                                                   
-model_idx = tf.keras.applications.VGG16(include_top=False, 
-                                    weights='imagenet', 
-                                    input_tensor=None, 
-                                    input_shape=None, 
-                                    pooling='max')
-                                    
-preprocess_idx = tf.keras.applications.vgg16.preprocess_input
+#def similarity(vector1, vector2):
+#        return np.dot(vector1, vector2.T) / np.dot(np.linalg.norm(vector1, axis=1, keepdims=True),
+#                                                   np.linalg.norm(vector2.T, axis=0, keepdims=True))
+#                                                   
+#model_idx = tf.keras.applications.VGG16(include_top=False, 
+#                                    weights='imagenet', 
+#                                    input_tensor=None, 
+#                                    input_shape=None, 
+#                                    pooling='max')
+#                                    
+#preprocess_idx = tf.keras.applications.vgg16.preprocess_input
 
 #a_ = ord('а')
 #abc_ = ''.join([chr(i) for i in range(a_,a_+32)])
@@ -596,86 +597,86 @@ class ImageWebSocket(tornado.websocket.WebSocketHandler):
         print("WebSocket opened from: " + self.request.remote_ip)
     def on_message(self, message):
         ms =  json.loads(message)
-        # 104 клавиш клавиатуры
-        if list(ms.keys())[0] == "KEYPRESS":
-            if len(ms["KEYPRESS"]) != 0:
-                self.Z_pad = np.zeros((1, len(ms["KEYPRESS"])))
-                for ix, k in enumerate(ms["KEYPRESS"]):
-                    if str(k["key_name"]).lower() in abc_:
-                        self.Z[abc_.index(k["key_name"].lower()),:] += k["time_press"]
-                        N = k["end_time_press"] - ms["KEYPRESS"][ix-1]["end_time_press"]
-                        if N > float(0):
-                            self.Z_pad[0, ix] = N
-                print ("----------------------------------", len(ms["KEYPRESS"]), self.Z_pad.shape)
-        if list(ms.keys())[0] == "send_test":
-            arr_img = np.zeros((224, 224, 3))
-            arr_img[0:self.Z.shape[0], 0:self.Z.shape[1], 0] = self.Z
-            
-            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
-            
-            vector = deep_vector(arr_img)
-            self.Z = np.zeros((len(abc_), 1))
-            D, I = self.index2.search(np.reshape(vector, [1, 512]), 3) 
-            if D[0][0] < 0.6:
-                INFO = self.D.client.execute(f"""
-                                                SELECT *
-                                                FROM {self.t_name}
-                                                WHERE {self.t_name}.ID = {I[0][0]} 
-                                              """) 
-                INFO = INFO[0][1]
-            else:
-                INFO = "Error"  
-                       
-            print ("SEND_TEST", D, I, INFO)
-            self.write_message(json.dumps({"switch":"SendTest", 
-                                           "NameABC":INFO, 
-                                           "coefficiens": float(D[0][0])}))
-        
-#        if list(ms.keys())[0] == "error_reg":
-            #1 p(n) = p(0)×P n
-#           index.add_with_ids(vectors, ids)  
+#        # 104 клавиш клавиатуры
+#        if list(ms.keys())[0] == "KEYPRESS":
+#            if len(ms["KEYPRESS"]) != 0:
+#                self.Z_pad = np.zeros((1, len(ms["KEYPRESS"])))
+#                for ix, k in enumerate(ms["KEYPRESS"]):
+#                    if str(k["key_name"]).lower() in abc_:
+#                        self.Z[abc_.index(k["key_name"].lower()),:] += k["time_press"]
+#                        N = k["end_time_press"] - ms["KEYPRESS"][ix-1]["end_time_press"]
+#                        if N > float(0):
+#                            self.Z_pad[0, ix] = N
+#                print ("----------------------------------", len(ms["KEYPRESS"]), self.Z_pad.shape)
+#        if list(ms.keys())[0] == "send_test":
+#            arr_img = np.zeros((224, 224, 3))
+#            arr_img[0:self.Z.shape[0], 0:self.Z.shape[1], 0] = self.Z
+#            
+#            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
+#            
+#            vector = deep_vector(arr_img)
+#            self.Z = np.zeros((len(abc_), 1))
+#            D, I = self.index2.search(np.reshape(vector, [1, 512]), 3) 
+#            if D[0][0] < 0.6:
+#                INFO = self.D.client.execute(f"""
+#                                                SELECT *
+#                                                FROM {self.t_name}
+#                                                WHERE {self.t_name}.ID = {I[0][0]} 
+#                                              """) 
+#                INFO = INFO[0][1]
+#            else:
+#                INFO = "Error"  
+#                       
+#            print ("SEND_TEST", D, I, INFO)
+#            self.write_message(json.dumps({"switch":"SendTest", 
+#                                           "NameABC":INFO, 
+#                                           "coefficiens": float(D[0][0])}))
+#        
+##        if list(ms.keys())[0] == "error_reg":
+#            #1 p(n) = p(0)×P n
+##           index.add_with_ids(vectors, ids)  
 
-        """
-        шаг == секунда
-        стохастический вектор - p(n)
-        36 - буквы, пробел, точка, запятая
-        36 - мы допускаем что за одну секунду не возможно нажать больше 36 символов
-        
-        для одного человека
-        цикл:
-            если поступившие данные имеют в себе отслеживаемые символы:
-                на первом шаге:
-                    создаем вектор [36,36] из полученного
-                    сохраняем в DB
-                все остальные шаги:
-                    из базы данных получаем данные с предыдущего шага - P
-                    вычислить стохастический вектор p(n) = p(0)×Pn ???
-                    вычислить медиану/среднее
-                    
-                    мы получим числовые коэффициент отображающий вероятность 
-                    что поступившие данные похожи с данными из предыдущего шага?
+#        """
+#        шаг == секунда
+#        стохастический вектор - p(n)
+#        36 - буквы, пробел, точка, запятая
+#        36 - мы допускаем что за одну секунду не возможно нажать больше 36 символов
+#        
+#        для одного человека
+#        цикл:
+#            если поступившие данные имеют в себе отслеживаемые символы:
+#                на первом шаге:
+#                    создаем вектор [36,36] из полученного
+#                    сохраняем в DB
+#                все остальные шаги:
+#                    из базы данных получаем данные с предыдущего шага - P
+#                    вычислить стохастический вектор p(n) = p(0)×Pn ???
+#                    вычислить медиану/среднее
+#                    
+#                    мы получим числовые коэффициент отображающий вероятность 
+#                    что поступившие данные похожи с данными из предыдущего шага?
 
-        """
+#        """
 
-        if list(ms.keys())[0] == "save_test":
-            
-            arr_img = np.zeros((224, 224, 3))
-            arr_img[:self.Z.shape[0], :self.Z.shape[1], 0] = self.Z
-            
-            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
-            
-            vector = deep_vector(arr_img)
-            
-            self.Z = np.zeros((len(abc_), 1))
-            # clickhouse
-            _ID = int(self.D.show_count_tables(self.t_name)[0][0])
-            R_N = ms['NameABC']
-            self.D.client.execute(f"""INSERT INTO {self.t_name} 
-                        (ID, User) 
-                        VALUES ({_ID}, '{R_N}')""")
-            self.index2.add(np.reshape(vector, [1, 512]))
-            faiss.write_index(self.index2, "flat2.index")
-            print ("SAVE_TEST", R_N, _ID)
+#        if list(ms.keys())[0] == "save_test":
+#            
+#            arr_img = np.zeros((224, 224, 3))
+#            arr_img[:self.Z.shape[0], :self.Z.shape[1], 0] = self.Z
+#            
+#            arr_img[-1, -self.Z_pad.shape[1]:, 0] = self.Z_pad
+#            
+#            vector = deep_vector(arr_img)
+#            
+#            self.Z = np.zeros((len(abc_), 1))
+#            # clickhouse
+#            _ID = int(self.D.show_count_tables(self.t_name)[0][0])
+#            R_N = ms['NameABC']
+#            self.D.client.execute(f"""INSERT INTO {self.t_name} 
+#                        (ID, User) 
+#                        VALUES ({_ID}, '{R_N}')""")
+#            self.index2.add(np.reshape(vector, [1, 512]))
+#            faiss.write_index(self.index2, "flat2.index")
+#            print ("SAVE_TEST", R_N, _ID)
         
         if list(ms.keys())[0] == "Start":
             self.namefile = f'videos/{ms["Start"]["Name"]}'
@@ -760,7 +761,7 @@ app = tornado.web.Application([
         (r"/faces/(.*)", tornado.web.StaticFileHandler, {'path':'./faces'}),
         (r"/static_file/(.*)", tornado.web.StaticFileHandler, {'path':'./static_file'}),
     ])
-app.listen(8998)
+app.listen(8889)
 
 tornado.ioloop.IOLoop.current().start()
 

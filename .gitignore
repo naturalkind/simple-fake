@@ -1,7 +1,9 @@
 *.mp4
+*.MP4
 *.mpeg4
 *.avi
 env/
+venv/
 faces/
 *.pt
 *.index

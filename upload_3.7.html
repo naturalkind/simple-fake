@@ -64,7 +64,7 @@
         </div>
         <button type='button' class='Button' id="reg_bt">REGISTRATION</button>
         <button type='button' class='Button' id="log_bt">LOGIN</button>
-        <button type='button' class='Button' id="idk_bt">USER IDENTIFICATION KEYSTROKE</button>
+<!--        <button type='button' class='Button' id="idk_bt">USER IDENTIFICATION KEYSTROKE</button>-->
     </div>
     <div id="InfoUser">
         <div id="text_user_info">
@@ -182,31 +182,31 @@ function send_test(self) {
 
 var reg_bt = document.getElementById("reg_bt");
 var log_bt = document.getElementById("log_bt");
-var idk_bt = document.getElementById("idk_bt");
+<!--var idk_bt = document.getElementById("idk_bt");-->
 reg_bt.style.margin = "4px auto";
 log_bt.style.margin = "4px auto";
-idk_bt.style.margin = "4px auto";
+<!--idk_bt.style.margin = "4px auto";-->
 
-idk_bt.addEventListener('click', function(e) {
-    idk_block.style.display = "block";
-    registration.style.display = "none";
-    // кнопки
-    reg_bt.style.display = "none";
-    log_bt.style.display = "none";
-    idk_bt.style.display = "none";
-    // кнопка назад
-    icon_back[0].style.display = "block"
-    
-    // отправлять каждую секунду данные
-    setInterval(recording_key, 1000);
-});
+<!--idk_bt.addEventListener('click', function(e) {-->
+<!--    idk_block.style.display = "block";-->
+<!--    registration.style.display = "none";-->
+<!--    // кнопки-->
+<!--    reg_bt.style.display = "none";-->
+<!--    log_bt.style.display = "none";-->
+<!--    idk_bt.style.display = "none";-->
+<!--    // кнопка назад-->
+<!--    icon_back[0].style.display = "block"-->
+<!--    -->
+<!--    // отправлять каждую секунду данные-->
+<!--    setInterval(recording_key, 1000);-->
+<!--});-->
 
 
 reg_bt.addEventListener('click', function(e) {
     registration.style.display = "block";
     reg_bt.style.display = "none";
     log_bt.style.display = "none";
-    idk_bt.style.display = "none";
+<!--    idk_bt.style.display = "none";-->
     // кнопка назад
     icon_back[0].style.display = "block"
 });
@@ -216,7 +216,7 @@ log_bt.addEventListener('click', function(e) {
     login.style.display = "block";
     reg_bt.style.display = "none";
     log_bt.style.display = "none";
-    idk_bt.style.display = "none";
+<!--    idk_bt.style.display = "none";-->
     // кнопка назад    
     icon_back[0].style.display = "block"
 });        
@@ -226,7 +226,7 @@ icon_back[0].addEventListener('click', function(e) {
     // кнопки
     reg_bt.style.display = "block";
     log_bt.style.display = "block";
-    idk_bt.style.display = "block";
+<!--    idk_bt.style.display = "block";-->
     
     login.style.display = "none";
     registration.style.display = "none";
