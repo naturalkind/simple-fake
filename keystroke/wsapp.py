@@ -330,7 +330,7 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                 else:
                     div_temp += f'<br>ERROR, you are not <span id="user_msg">{self.sender_name}</span><br>'
                     self.result_ = "Error"
-                if self.temp_len_text > 20:
+                if self.temp_len_text > 100:
                 
                     _data={
                             "type": "wallpost",
