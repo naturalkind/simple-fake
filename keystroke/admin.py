@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from keystroke.models import *
 # Register your models here.
 
@@ -7,7 +8,7 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ('text', 'id', 'user_post')
     fields = ('text', 'user_post', 'pure_data', 'status', 'text_to_test')
 
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(UserAdmin):
     list_display = ('username', 'id')
     search_fields = ('username', 'id')
 

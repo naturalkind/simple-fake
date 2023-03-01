@@ -279,7 +279,8 @@ class B_Handler(AsyncJsonWebsocketConsumer):
 #        self.Z_pad = np.zeros((len(abc_), 1))
             self.idx_enter = 0
             self.temp_len_text = 0
-            self.result_ = ""
+            self.result_ = "Error"
+            
         #----------------------->
             
         print ("CHANNEL_LAYERS", self.channel_name, self.room_group_name, self.scope['user']) #self.scope, 
@@ -313,24 +314,29 @@ class B_Handler(AsyncJsonWebsocketConsumer):
 #                print (response)
 #                pass
                 arr = response["KEYPRESS"]
+                self.temp_len_text = len(arr)
                 arr_bad = response["KEYPRESS_BAD"]
                 div_temp = ""
-                for ix, i in enumerate(arr):
-                    self.temp_len_text = ix
-                    if i['key_name'] == " ":
-                        for ii in arr_bad:
-                            if ii[0] == "Alt":
-                                if ii[1]==ix or ii[1]==(ix+1) or ii[1]==(ix-1):
-                                    self.idx_enter += 1
+                self.idx_enter = 0
+                self.result_dict = {"Control":0, "Alt":0, "Shift":0}
+                if len(arr_bad) > 1:
+                    for ix, i in enumerate(arr):
+                        if i['key_name'] == " ":
+                            for ii in arr_bad:
+                                if ii[0] == "Control" or ii[0] == "Alt":# or ii[0] == "Shift": 
+                                    if ii[1]==ix or ii[1]==(ix+1) or ii[1]==(ix-1):
+                                        self.result_dict[ii[0]] += 1
+                                        self.idx_enter += 1
                 
-                print (self.temp_len_text, self.idx_enter)
+                #print (self.temp_len_text, self.idx_enter, arr_bad, self.result_dict)
                 if self.idx_enter>2:
                     self.result_ = "Done"
-                    div_temp += f'<br>Hello <span id="user_msg">{self.sender_name}</span>, test complete<br>'
+                    div_temp = f'<br>Hello <span id="user_msg">{self.sender_name}</span>, test complete<br>'
                 else:
-                    div_temp += f'<br>ERROR, you are not <span id="user_msg">{self.sender_name}</span><br>'
+                    div_temp = f'<br>ERROR, you are not <span id="user_msg">{self.sender_name}</span><br>'
                     self.result_ = "Error"
-                if self.temp_len_text > 100:
+#                if self.temp_len_text > 100:
+                if self.temp_len_text > 50:
                 
                     _data={
                             "type": "wallpost",
@@ -355,77 +361,88 @@ class B_Handler(AsyncJsonWebsocketConsumer):
                     #print (op)
                     value_pure += op["key_name"]
                 value_pure = value_pure.lower()
-                print (value_pure == T)
-                if value_pure == T:
-                    if response["test"] != True:
-                        post = Post()
-                        post.pure_data = response["KEYPRESS"]
-                        post.text = T
-                        post.user_post = self.sender_name
-                        post_async = sync_to_async(post.save)
-                        await post_async()    
-                        #---------------------------------------->
-                        
-                        div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
-                        np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
-                        #print ("............", T, response["KEYPRESS"])
+                print (value_pure == T, self.result_)
+                if self.result_ != "Error":
+                    if value_pure == T:
+                        if response["test"] != True:
+                            post = Post()
+                            post.pure_data = response["KEYPRESS"]
+                            post.text = T
+                            post.user_post = self.sender_name
+                            post_async = sync_to_async(post.save)
+                            await post_async()    
+                            #---------------------------------------->
+                            
+                            div_temp = f"<div id='full_nameuser'>{self.sender_name.username}</div><div id='full_text'>{T}</div><br><table><tbody>"  
+                            np_zeros = np.zeros((len(combination), 2)) #len(control_text), 
+                            #print ("............", T, response["KEYPRESS"])
 
-                        for ih, h in enumerate(combination):
-                            idx = indices(T, h)
-                            if idx != []:
-                                #print (f"INDICES -> {h} <-------------------", idx)
-                                temp_ls = []
-                                for k in idx:
-                                    temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
-                                np_zeros[ih, 0] = np.median(np.array(temp_ls))
-                                np_zeros[ih, 1] = T.count(h)
-                                div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
-        #                        print ("MDEIANA", np.median(np.array(temp_ls)))
-                        div_temp += "</tbody></table>"                
-                        #---------------------------------------->
-                        now = datetime.datetime.now().strftime('%H:%M:%S')
-                        _data={
-                                "type": "wallpost",
-                                "comment_text": T,
-                                "post_id": post.id,
-                                "user_id": self.sender_id,
-                                "user_post": self.sender_name.username,
-                                "timecomment":now,
-                                "status" : "send_test",
-                                "html": div_temp
-                            }
-                        await self.channel_layer.group_send(self.room_group_name, _data)  
-                    else:
-                        post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
-                        T0 = post.text.lower().replace("\n", "")
-    #                    dt0 = gen_pd(T0, post.pure_data)
-    #                    dt1 = gen_pd(T1, response["KEYPRESS"])
-                        dt0 = time_pair(post.pure_data)
-                        dt1 = time_pair(response["KEYPRESS"])
-                        #'pair', 'time'
-                        #--------------->
-                        
-                        p1 = set(dt0['pair'].values)    
-                        p2 = set(dt1['pair'].values)
-                        pair_all = list(p1 & p2)
-                        print ("ONE----->", pair_all)
-                        test_list = []
-                        test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
-                        #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
-                        
-                        #print (test_list)
+                            for ih, h in enumerate(combination):
+                                idx = indices(T, h)
+                                if idx != []:
+                                    #print (f"INDICES -> {h} <-------------------", idx)
+                                    temp_ls = []
+                                    for k in idx:
+                                        temp_ls.append(response["KEYPRESS"][k+1]["time_keydown"]-response["KEYPRESS"][k]["time_keyup"])
+                                    np_zeros[ih, 0] = np.median(np.array(temp_ls))
+                                    np_zeros[ih, 1] = T.count(h)
+                                    div_temp += f"<tr><td>{h}</td><td>{T.count(h)}</td><td>{np.median(np.array(temp_ls))}</td></tr>"
+            #                        print ("MDEIANA", np.median(np.array(temp_ls)))
+                            div_temp += "</tbody></table>"                
+                            #---------------------------------------->
+                            now = datetime.datetime.now().strftime('%H:%M:%S')
+                            _data={
+                                    "type": "wallpost",
+                                    "comment_text": T,
+                                    "post_id": post.id,
+                                    "user_id": self.sender_id,
+                                    "user_post": self.sender_name.username,
+                                    "timecomment":now,
+                                    "status" : "send_test",
+                                    "html": div_temp
+                                }
+                            await self.channel_layer.group_send(self.room_group_name, _data)  
+                        else:
+                            post = await database_sync_to_async(Post.objects.get)(id=response["id_post"])
+                            T0 = post.text.lower().replace("\n", "")
+        #                    dt0 = gen_pd(T0, post.pure_data)
+        #                    dt1 = gen_pd(T1, response["KEYPRESS"])
+                            dt0 = time_pair(post.pure_data)
+                            dt1 = time_pair(response["KEYPRESS"])
+                            #'pair', 'time'
+                            #--------------->
+                            
+                            p1 = set(dt0['pair'].values)    
+                            p2 = set(dt1['pair'].values)
+                            pair_all = list(p1 & p2)
+                            print ("ONE----->", pair_all)
+                            test_list = []
+                            test_list, p_value, med_cos, len_pair = def_boot_cos(dt0, dt1, pair_all, test_list)
+                            #test_list_all, booted_data["p_value"], np.median(booted_data["boot_data"])
+                            
+                            #print (test_list)
 
-                        t_S = "" 
-                        for io, o in enumerate(test_list[0]):
-                            t_S += f"{o}, "
-                        div_temp = f"[{t_S}], p_value = {p_value}, median_cos = {med_cos}, Количество общих пар: {len_pair}"                            
-                        #---------------->
-                        _data={
-                                "type": "wallpost",
-                                "status" : "send_test_p",
-                                "html": div_temp
-                            }
-                        await self.channel_layer.group_send(self.room_group_name, _data) 
+                            t_S = "" 
+                            for io, o in enumerate(test_list[0]):
+                                t_S += f"{o}, "
+                            div_temp = f"[{t_S}], p_value = {p_value}, median_cos = {med_cos}, Количество общих пар: {len_pair}"                            
+                            #---------------->
+                            _data={
+                                    "type": "wallpost",
+                                    "status" : "send_test_p",
+                                    "html": div_temp
+                                }
+                            await self.channel_layer.group_send(self.room_group_name, _data)                                 
+                else:
+                    div_temp = f'<br>ERROR, you are not <span id="user_msg">{self.sender_name}</span><br>'
+                    _data={
+                            "type": "wallpost",
+                            "user_post": self.sender_name.username,
+                            "status" : "Error",
+                            "result": self.result_,
+                            "html": div_temp
+                        }
+                    await self.channel_layer.group_send(self.room_group_name, _data) 
 
     async def wallpost(self, res):
         """ Receive message from room group """

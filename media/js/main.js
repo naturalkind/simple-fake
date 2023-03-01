@@ -387,7 +387,7 @@ function handle(e) {
 //--------------------------------->
 var result_ = "start"
 function recording_key() {
-    console.log('tick', arr)
+    //console.log('tick', arr)
     let data = JSON.stringify({'event':'KEYPRESS',
                                'KEYPRESS': arr,
                                'KEYPRESS_BAD': arr_bad,
@@ -780,6 +780,14 @@ ws.onmessage = function(data) {
         if (message_data["result"]=="Done") {
             result_ = "stop";
         } 
+        blockup.innerHTML = `<div id="node">
+                                        <div id="text_msg">${message_data["html"]}</div>
+                                        <br>
+                                        <button type='button' class='Button' onclick="close_div()">close</button>
+                                    </div>`        
+        blockup.style.display = "block";
+        document.body.style.overflow = 'hidden';
+    } else if (message_data["status"]=="Error") { 
         blockup.innerHTML = `<div id="node">
                                         <div id="text_msg">${message_data["html"]}</div>
                                         <br>
